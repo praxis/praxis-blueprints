@@ -138,16 +138,23 @@ describe Praxis::Blueprint do
       context 'creating additional blueprint instances from that object' do
         subject(:additional_instance) { blueprint_class.new(resource) }
 
-        # context 'with caching enabled' do
-        #   around do |example|
-        #     Praxis::Blueprint.caching_enabled = true
-        #     example.run
-        #     Praxis::Blueprint.caching_enabled = false
-        #   end
+        context 'with caching enabled' do
+          around do |example|
+            Praxis::Blueprint.caching_enabled = true
+            Praxis::Blueprint.cache = Hash.new { |h,k| h[k] = Hash.new }
+            example.run
 
-        #   it { should be blueprint_instance }
-        # end
+            Praxis::Blueprint.caching_enabled = false
+            Praxis::Blueprint.cache = nil
+          end
 
+          it 'uses the cache to memoize instance creation' do
+            additional_instance.should be(additional_instance)
+            blueprint_class.cache.should have_key(resource)
+            blueprint_class.cache[resource].should be(blueprint_instance)
+          end
+        end
+      
         context 'with caching disabled' do
           it { should_not be blueprint_instance }
         end

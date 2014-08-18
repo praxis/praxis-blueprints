@@ -123,7 +123,6 @@ module Praxis
 
 
     def self.caching_enabled?
-      return false
       @@caching_enabled
     end
 
@@ -131,21 +130,21 @@ module Praxis
       @@caching_enabled = caching_enabled
     end
 
-    # # Fetch current blueprint cache, scoped by this class
-    # def self.cache
-    #   IdentityMap.current.blueprint_cache[self]
-    # end
+    # Fetch current blueprint cache, scoped by this class
+    def self.cache
+      Thread.current[:praxis_blueprints_cache][self]
+    end
 
+    def self.cache=(cache)
+      Thread.current[:praxis_blueprints_cache] = cache
+    end
 
     def self.valid_type?(value)
       # FIXME: this should be more... ducklike
       value.kind_of?(self) || value.kind_of?(self.attribute.type)
     end
 
-
-
     def self.example(context=nil, **values)
-
       context = case context
       when nil
         ["#{self.name}-#{values.object_id.to_s}"]
