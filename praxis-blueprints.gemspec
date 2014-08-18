@@ -5,60 +5,35 @@ require 'praxis-blueprints/version'
 Gem::Specification.new do |spec|
   spec.name          = "praxis-blueprints"
   spec.version       = Praxis::BLUEPRINTS_VERSION
-  spec.authors       = ["RightScale, Inc."]
-  spec.summary       = %q{Blueprints extension for Praxis.}
-  spec.description   = %q{Adds blueprints and views. Should add more here.}
-  spec.homepage      = ""
-  spec.license       = "MIT"
+  spec.authors = ["Josep M. Blanquer","Dane Jensen"]
+  spec.date = "2014-08-15"
+  spec.summary = %q{Attributes, views, rendering and example generation for common Blueprint Structures.}
+  spec.description = "Praxis Blueprints is a library that allows for defining a reusable class structures that has a set of typed attributes and a set of views with which to render them. Instantiations of Blueprints resemble ruby Structs which respond to methods of the attribute names. Rendering is format-agnostic in that
+it results in a structured hash instead of an encoded string. Blueprints can automatically generate object structures that follow the attribute definitions."
+  spec.email = ["blanquer@gmail.com","dane.jensen@gmail.com"]
+  
+  spec.homepage = "https://github.com/rightscale/praxis-blueprints"
+  spec.license = "MIT"
+  spec.required_ruby_version = ">=2.1"
 
   spec.files         = `git ls-files -z`.split("\x0")
-  spec.executables   = spec.files.grep(%r{^bin/}) { |f| File.basename(f) }
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ["lib"]
 
-  spec.add_runtime_dependency(%q<randexp>, [">= 0"])
-  spec.add_runtime_dependency(%q<sequel>, [">= 0"])
-  spec.add_runtime_dependency(%q<attributor>, [">= 0"])
-  spec.add_runtime_dependency(%q<activesupport>, [">= 0"])
+  spec.add_runtime_dependency(%q<randexp>, ["~> 0"])
+  spec.add_runtime_dependency(%q<attributor>, ["~> 2"])
+  spec.add_runtime_dependency(%q<activesupport>, ["~> 4"])
 
   spec.add_development_dependency "bundler", "~> 1.6"
-  spec.add_development_dependency "rake"
+  spec.add_development_dependency "rake", "~> 0"
 
   spec.add_development_dependency(%q<redcarpet>, ["< 3.0"])
-  spec.add_development_dependency(%q<yard>, [">= 0"])
-  spec.add_development_dependency(%q<guard>, [">= 0"])
+  spec.add_development_dependency(%q<yard>, ["~> 0.8.7"])
+  spec.add_development_dependency(%q<guard>, ["~> 2"])
   spec.add_development_dependency(%q<guard-rspec>, [">= 0"])
   spec.add_development_dependency(%q<rspec>, ["< 2.99"])
-  #s.add_development_dependency('simplecov', ['>= 0'])
-  spec.add_development_dependency(%q<fuubar>, [">= 0"])
-  spec.add_development_dependency(%q<pry>, [">= 0"])
-  spec.add_development_dependency(%q<pry-byebug>, [">= 0"])
-  spec.add_development_dependency(%q<pry-stack_explorer>, [">= 0"])
+  spec.add_development_dependency(%q<pry>, ["~> 0"])
+  spec.add_development_dependency(%q<pry-byebug>, ["~> 1"])
+  spec.add_development_dependency(%q<pry-stack_explorer>, ["~> 0"])
+  spec.add_development_dependency(%q<fuubar>, ["~> 1"])
 end
-
-
-# Gem::Specification.new do |s|
-#   s.name = "praxis-blueprints"
-#   s.version = "1.0.0"
-
-#   s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
-#   s.require_paths = ["lib"]
-  
-#   s.date = "2014-08-13"
-#   s.extra_rdoc_files = [
-#     "README.md"
-#   ]
-#   s.files = [
-#     "lib/praxis-blueprints.rb",
-#     "lib/praxis-blueprints/blueprint.rb",
-#     "lib/praxis-blueprints/config_hash.rb",
-#     "lib/praxis-blueprints/finalizable.rb",
-#     "lib/praxis-blueprints/view.rb"
-#   ]
-#   s.rubygems_version = "2.2.2"
-#   s.summary = nil
-
-#   s.specification_version = 4
-  
-# end
-

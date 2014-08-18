@@ -1,8 +1,7 @@
 # Praxis Blueprints
 
-Praxis Blueprints is a library that allows for defining a Struct-like class, with multiple views for serializing to a hash.
-
-Maintained by RightScale.
+Praxis Blueprints is a library that allows for defining a reusable class structures that has a set of typed attributes and a set of views with which to render them. Instantiations of Blueprints resemble ruby Structs which respond to methods of the attribute names. Rendering is format-agnostic in that
+it results in a structured hash instead of an encoded string. Blueprints can automatically generate object structures that follow the attribute definitions.
 
 ## Installation
 
@@ -20,7 +19,7 @@ Or install it yourself as:
 
 ## Usage
 
-TODO: Write usage instructions here
+Documentation coming soon.
 
 ## Contributing
 
