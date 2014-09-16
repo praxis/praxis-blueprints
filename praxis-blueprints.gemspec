@@ -22,7 +22,7 @@ it results in a structured hash instead of an encoded string. Blueprints can aut
 
   spec.add_runtime_dependency(%q<randexp>, ["~> 0"])
   spec.add_runtime_dependency(%q<attributor>, ["~> 2"])
-  spec.add_runtime_dependency(%q<activesupport>, ["~> 4"])
+  spec.add_runtime_dependency(%q<activesupport>, [">= 3"])
 
   spec.add_development_dependency "bundler", "~> 1.6"
   spec.add_development_dependency "rake", "~> 0"
