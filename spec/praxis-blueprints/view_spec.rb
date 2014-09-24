@@ -220,9 +220,8 @@ describe Praxis::View do
       end
 
       it { should eq expected_output }
-
-
     end
+
 
     context 'with a specified view' do
       let(:view) do
@@ -243,59 +242,12 @@ describe Praxis::View do
     end
 
   end
-  # context 'with embedded related objects' do
-  #   context '#embed' do
-  #     let(:view) do
-  #       Praxis::View.new(:default, Person) do
-  #         attribute :name
-  #         embed :address
-  #       end
-  #     end
-
-  #     let(:expected_output) do
-  #       {
-  #         :name => person.name,
-  #         :address => {
-  #           :street => address.street,
-  #           :state => address.state
-  #       }}
-  #     end
-
-
-  #     before do
-  #       address.should_receive(:to_hash).with(:default).and_call_original
-  #     end
-
-  #     it { should == expected_output }
-
-  #   end
-
-  #   context '#embed_collection' do
-  #     let(:view) do
-  #       Praxis::View.new(:aka, Person) do
-  #         attribute :name
-  #         embed_collection :aliases
-  #       end
-  #     end
-
-  #     subject(:output) { view.to_hash(person) }
-
-
-  #     let(:expected_output) do
-  #       {
-  #         :name => person.name,
-  #         :aliases => person.aliases.collect { |a| a.to_hash(:default)}
-  #       }
-  #     end
-
-  #     it { should == expected_output }
-  #   end
-  # end
+ 
 
   context '#describe' do
     subject(:description) { view.describe}
-    its(:keys){ should == [:attributes] }
-
+    its(:keys){ should =~ [:attributes, :type] }
+    its([:type]) { should eq(:standard) }
     context 'returns attributes' do
       subject { description[:attributes] }
       
@@ -311,6 +263,4 @@ describe Praxis::View do
     end
   end
 
-
-  #it 'has a spec for validating attribute names'
 end
