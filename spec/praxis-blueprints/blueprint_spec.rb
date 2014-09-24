@@ -4,7 +4,6 @@ describe Praxis::Blueprint do
 
   subject(:blueprint_class) { Person }
 
-
   context 'deterministic examples' do
     it 'works' do
       person_1 = Person.example('person 1')
@@ -322,31 +321,6 @@ describe Praxis::Blueprint do
       output[:full_name].should have_key(:first)
       output[:full_name].should have_key(:last)
     end
-  end
-
-   # context 'with circular references' do
-   #   let(:view_name) { :master }
-
-   #   # TODO: think about circular references without caching
-   #   around do |example|
-   #     Praxis::Blueprint.caching_enabled = true
-   #     example.run
-   #     Praxis::Blueprint.caching_enabled = false
-   #   end
-
-   #   it 'terminates' do
-   #     expect {
-   #       Person.example.render(:master)
-   #     }.to_not raise_error
-   #   end
-
-   #   it 'renders Praxis::Blueprint::CIRCULAR_REFERENCE_MARKER for circular references' do
-   #     person.address.resident.should be(person)
-   #     output[:address][:resident].should eq(Praxis::Blueprint::CIRCULAR_REFERENCE_MARKER)
-   #   end
-
-   # end
-  
   end
 
  end
