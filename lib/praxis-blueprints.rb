@@ -11,4 +11,4 @@ require 'praxis-blueprints/config_hash'
 
 require 'praxis-blueprints/blueprint'
 require 'praxis-blueprints/view'
-
+require 'praxis-blueprints/collection_view'

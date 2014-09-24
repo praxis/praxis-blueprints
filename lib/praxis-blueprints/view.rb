@@ -34,7 +34,7 @@ module Praxis
         next if value.nil?
         
         # FIXME: this is such an ugly way to do this. Need attributor#67.
-        if dumpable.kind_of?(View)
+        if dumpable.kind_of?(View) || dumpable.kind_of?(CollectionView)
           new_context = context + [name]
           hash[name] = dumpable.dump(value, context: new_context ,**(dumpable_opts||{}))
         else
@@ -86,7 +86,7 @@ module Praxis
         view_attributes[k] = inner_desc
       end
 
-      { attributes: view_attributes }
+      { attributes: view_attributes, type: :standard }
     end
 
   end

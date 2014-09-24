@@ -293,37 +293,36 @@ describe Praxis::Blueprint do
  end
 
  context '#render' do
-   let(:person) { Person.example }
-   let(:view_name) { :default }
-   subject(:output) { person.render(view_name) }
+  let(:person) { Person.example }
+  let(:view_name) { :default }
+  subject(:output) { person.render(view_name) }
 
-   context 'with a sub-attribute that is a blueprint' do
+  context 'with a sub-attribute that is a blueprint' do
 
-     it { should have_key(:name) }
-     it { should have_key(:address) }
-     it 'renders the sub-attribute correctly' do
-       output[:address].should have_key(:street)
-       output[:address].should have_key(:state)
-     end
+    it { should have_key(:name) }
+    it { should have_key(:address) }
+    it 'renders the sub-attribute correctly' do
+      output[:address].should have_key(:street)
+      output[:address].should have_key(:state)
+    end
 
-     it 'reports a dump error with the appropriate context' do
-       person.address.should_receive(:state).and_raise("Kaboom")
-       expect {
-         person.render(view_name, context: ['special_root'])
-       }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address .*. Reason: .*Kaboom/)
-     end
-   end
+    it 'reports a dump error with the appropriate context' do
+      person.address.should_receive(:state).and_raise("Kaboom")
+      expect {
+        person.render(view_name, context: ['special_root'])
+      }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address .*. Reason: .*Kaboom/)
+    end
+  end
 
 
-   context 'with sub-attribute that is an Attributor::Model' do
-     it { should have_key(:full_name) }
-     it 'renders the model correctly' do
-       output[:full_name].should be_kind_of(Hash)
-       output[:full_name].should have_key(:first)
-       output[:full_name].should have_key(:last)
-     end
-   end
-
+  context 'with sub-attribute that is an Attributor::Model' do
+    it { should have_key(:full_name) }
+    it 'renders the model correctly' do
+      output[:full_name].should be_kind_of(Hash)
+      output[:full_name].should have_key(:first)
+      output[:full_name].should have_key(:last)
+    end
+  end
 
    # context 'with circular references' do
    #   let(:view_name) { :master }
@@ -347,7 +346,9 @@ describe Praxis::Blueprint do
    #   end
 
    # end
-   
+  
+  end
+
  end
 
 end
