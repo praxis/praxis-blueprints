@@ -2,6 +2,10 @@
 
 ## next
 
+* next thing here
+
+## 1.1.0
+
 * Added CollectionView, a special type of view that renders an array of objects with another view.
 
 
