@@ -231,7 +231,8 @@ module Praxis
       if @block
         self.define_attribute!
         self.define_readers!
-        self.generate_master_view!
+        # Don't blindly override a master view if the MediaType wants to define it on its own
+        self.generate_master_view! unless self.view(:master)
       end
       super
     end
