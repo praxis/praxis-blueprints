@@ -2,7 +2,7 @@
 
 ## next
 
-* next thing here
+* `Blueprint` readers now always `load` the value for an attribute before returning it.
 
 ## 1.1.0
 
