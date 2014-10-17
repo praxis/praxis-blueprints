@@ -274,21 +274,26 @@ module Praxis
        else
          value = @object.send(name)
          return value if value.nil? || value.kind_of?(attribute.type)
-         attribute.type.new(value)
+         attribute.type.load(value)
        end
       end
     end
 
     def self.define_direct_reader!(name)
-      module_eval <<-RUBY, __FILE__, __LINE__ + 1
-        def #{name}
-          if @decorators && @decorators.respond_to?(:#{name})
-            @decorators.#{name}
-          else
-            @object.#{name}
-          end
-        end
-      RUBY
+      attribute = self.attributes[name]
+      # TODO: profile and optimize
+      # because we use the attribute in the reader, 
+      # it's likely faster to use define_method here 
+      # than module_eval, but we should make sure.
+      define_method(name) do
+       if @decorators && @decorators.respond_to?(name)
+         @decorators.send(name)
+       else
+         value = @object.__send__(name)
+         return value if value.nil? || value.kind_of?(attribute.type)
+         attribute.load(value)
+       end
+      end
     end
 
     def self.generate_master_view!
@@ -304,13 +309,11 @@ module Praxis
 
 
     def validate(context=Attributor::DEFAULT_ROOT_CONTEXT)
-
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
       context = [context] if context.is_a? ::String
 
       raise "validation conflict" if @validating
       @validating = true
-
 
       self.class.attributes.each_with_object(Array.new) do |(sub_attribute_name, sub_attribute), errors|
         sub_context = self.class.generate_subcontext(context,sub_attribute_name)
