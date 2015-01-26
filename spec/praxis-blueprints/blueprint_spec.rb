@@ -309,7 +309,7 @@ describe Praxis::Blueprint do
       person.address.should_receive(:state).and_raise("Kaboom")
       expect {
         person.render(view_name, context: ['special_root'])
-      }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address .*. Reason: .*Kaboom/)
+      }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
     end
   end
 
