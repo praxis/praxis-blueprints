@@ -82,7 +82,7 @@ module Praxis
             opts[:reference] = self
           end
 
-          @options = opts
+          @options.merge!(opts)
           @block = block
         end
 
