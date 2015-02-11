@@ -6,7 +6,6 @@ Gem::Specification.new do |spec|
   spec.name          = "praxis-blueprints"
   spec.version       = Praxis::BLUEPRINTS_VERSION
   spec.authors = ["Josep M. Blanquer","Dane Jensen"]
-  spec.date = "2014-08-15"
   spec.summary = %q{Attributes, views, rendering and example generation for common Blueprint Structures.}
   spec.description = "Praxis Blueprints is a library that allows for defining a reusable class structures that has a set of typed attributes and a set of views with which to render them. Instantiations of Blueprints resemble ruby Structs which respond to methods of the attribute names. Rendering is format-agnostic in that
 it results in a structured hash instead of an encoded string. Blueprints can automatically generate object structures that follow the attribute definitions."
