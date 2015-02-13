@@ -56,7 +56,7 @@ module Praxis
     def self.describe(shallow=false)
       type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
 
-      description = self.attribute.type.describe(shallow).merge!(name: type_name)
+      description = self.attribute.type.describe(shallow).merge!(id: self.id, name: type_name)
 
       unless shallow
         description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|

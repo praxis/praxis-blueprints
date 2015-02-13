@@ -164,7 +164,29 @@ describe Praxis::Blueprint do
 
   end
 
-
+  context '.describe' do
+    before do
+      expect(blueprint_class.attribute.type).to receive(:describe).and_return(type_describe)
+    end
+    let(:type_describe){ {name: "Fake", id: "From Struct attr", other: "type attribute"} }
+    
+    context 'for non-shallow descriptions' do
+      subject(:output){ blueprint_class.describe }
+      its([:name]){ should eq(blueprint_class.name)}
+      its([:id]){ should eq(blueprint_class.id)}
+      its([:other]){ should eq("type attribute")}
+      its([:views]){ should be_kind_of(Hash)}
+      it 'should contain the an entry for each view' do
+        subject[:views].keys.should include(:default, :current, :extended, :master)
+      end
+    end
+    
+    context 'for shallow descriptions' do
+      it 'should not include views' do
+        blueprint_class.describe(true).key?(:views).should be(false)
+      end
+    end
+  end
   context '.validate' do
     let(:hash) { {name: 'bob'} }
     let(:person) { Person.load(hash) }
@@ -179,150 +201,149 @@ describe Praxis::Blueprint do
 
       it { should have(1).item }
       its(:first) { should =~ /Attribute \$.address.state/ }
- end
+    end
+    
+    context 'for objects of the wrong type' do
+      it 'raises an error' do
+        expect {
+          Person.validate(Object.new)
+        }.to raise_error(ArgumentError, /Error validating .* as Person for an object of type Object/)
+      end
+    end
+  end
 
- context 'for objects of the wrong type' do
-   it 'raises an error' do
-     expect {
-       Person.validate(Object.new)
-     }.to raise_error(ArgumentError, /Error validating .* as Person for an object of type Object/)
-   end
- end
- end
-
-
- context '.load' do
-   let(:hash) do
-     {
-       :name => 'Bob',
-       :full_name => {:first => 'Robert', :last => 'Robertson'},
-       :address => {:street => 'main', :state => 'OR'}
-     }
-   end
-   subject(:person) { Person.load(hash) }
-
-   it { should be_kind_of(Person) }
-
-   context 'recursively loading sub-attributes' do
-     context 'for a Blueprint' do
-       subject(:address) { person.address }
-       it { should be_kind_of(Address) }
+  context '.load' do
+    let(:hash) do
+      {
+        :name => 'Bob',
+        :full_name => {:first => 'Robert', :last => 'Robertson'},
+        :address => {:street => 'main', :state => 'OR'}
+      }
+    end
+    subject(:person) { Person.load(hash) }
+  
+    it { should be_kind_of(Person) }
+  
+    context 'recursively loading sub-attributes' do
+      context 'for a Blueprint' do
+        subject(:address) { person.address }
+        it { should be_kind_of(Address) }
+      end
+      context 'for an Attributor::Model' do
+        subject(:full_name) { person.full_name }
+        it { should be_kind_of(FullName) }
+      end
+    end
+  
+  end
+  
+  
+  context 'decorators' do
+    let(:name) { 'Soren II' }
+  
+    let(:object) { Person.example.object }
+    subject(:person) { Person.new(object, decorators) }
+  
+  
+    context 'as a hash' do
+      let(:decorators) { {name: name} }
+      it do
+        pers = person
+        # binding.pry
+        pers.name.should eq('Soren II')
+      end
+  
+      its(:name) { should be(name) }
+  
+      context 'an additional instance with the equivalent hash' do
+        subject(:additional_person) { Person.new(object, {name: name}) }
+        it { should_not be person }
+      end
+  
+      context 'an additional instance with the same hash object' do
+        subject(:additional_person) { Person.new(object, decorators) }
+        it { should_not be person }
+      end
+  
+      context 'an instance of the same object without decorators' do
+        subject(:additional_person) { Person.new(object) }
+        it { should_not be person }
+      end
+    end
+  
+    context 'as an object' do
+      let(:decorators) { double("decorators", name: name) }
+      its(:name) { should be(name) }
+  
+      context 'an additional instance with the same object' do
+        subject(:additional_person) { Person.new(object, decorators) }
+        it { should_not be person }
+      end
+    end
+  
+  end
+  
+  
+  context 'with a provided :reference option on attributes' do
+    context 'that does not match the value set on the class' do
+  
+      subject(:mismatched_reference) do
+        Class.new(Praxis::Blueprint) do
+          self.reference = Class.new(Praxis::Blueprint)
+          attributes(reference: Class.new(Praxis::Blueprint)) {}
+        end
+      end
+  
+      it 'should raise an error' do
+        expect {
+          mismatched_reference.attributes
+        }.to raise_error
+      end
+  
+    end
+  end
+  
+  
+  context '.example' do
+    context 'with some attribute values provided' do
+      let(:name) { 'Sir Bobbert' }
+      subject(:person) { Person.example(name: name) }
+      its(:name) { should eq(name) }
+    end
+  end
+  
+  context '#render' do
+   let(:person) { Person.example }
+   let(:view_name) { :default }
+   subject(:output) { person.render(view_name) }
+  
+   context 'with a sub-attribute that is a blueprint' do
+  
+     it { should have_key(:name) }
+     it { should have_key(:address) }
+     it 'renders the sub-attribute correctly' do
+       output[:address].should have_key(:street)
+       output[:address].should have_key(:state)
      end
-     context 'for an Attributor::Model' do
-       subject(:full_name) { person.full_name }
-       it { should be_kind_of(FullName) }
-     end
-   end
-
- end
-
-
- context 'decorators' do
-   let(:name) { 'Soren II' }
-
-   let(:object) { Person.example.object }
-   subject(:person) { Person.new(object, decorators) }
-
-
-   context 'as a hash' do
-     let(:decorators) { {name: name} }
-     it do
-       pers = person
-       # binding.pry
-       pers.name.should eq('Soren II')
-     end
-
-     its(:name) { should be(name) }
-
-     context 'an additional instance with the equivalent hash' do
-       subject(:additional_person) { Person.new(object, {name: name}) }
-       it { should_not be person }
-     end
-
-     context 'an additional instance with the same hash object' do
-       subject(:additional_person) { Person.new(object, decorators) }
-       it { should_not be person }
-     end
-
-     context 'an instance of the same object without decorators' do
-       subject(:additional_person) { Person.new(object) }
-       it { should_not be person }
-     end
-   end
-
-   context 'as an object' do
-     let(:decorators) { double("decorators", name: name) }
-     its(:name) { should be(name) }
-
-     context 'an additional instance with the same object' do
-       subject(:additional_person) { Person.new(object, decorators) }
-       it { should_not be person }
-     end
-   end
-
- end
-
-
- context 'with a provided :reference option on attributes' do
-   context 'that does not match the value set on the class' do
-
-     subject(:mismatched_reference) do
-       Class.new(Praxis::Blueprint) do
-         self.reference = Class.new(Praxis::Blueprint)
-         attributes(reference: Class.new(Praxis::Blueprint)) {}
-       end
-     end
-
-     it 'should raise an error' do
+  
+     it 'reports a dump error with the appropriate context' do
+       person.address.should_receive(:state).and_raise("Kaboom")
        expect {
-         mismatched_reference.attributes
-       }.to raise_error
+         person.render(view_name, context: ['special_root'])
+       }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
      end
-
    end
- end
-
-
- context '.example' do
-   context 'with some attribute values provided' do
-     let(:name) { 'Sir Bobbert' }
-     subject(:person) { Person.example(name: name) }
-     its(:name) { should eq(name) }
+  
+  
+   context 'with sub-attribute that is an Attributor::Model' do
+     it { should have_key(:full_name) }
+     it 'renders the model correctly' do
+       output[:full_name].should be_kind_of(Hash)
+       output[:full_name].should have_key(:first)
+       output[:full_name].should have_key(:last)
+     end
    end
- end
-
- context '#render' do
-  let(:person) { Person.example }
-  let(:view_name) { :default }
-  subject(:output) { person.render(view_name) }
-
-  context 'with a sub-attribute that is a blueprint' do
-
-    it { should have_key(:name) }
-    it { should have_key(:address) }
-    it 'renders the sub-attribute correctly' do
-      output[:address].should have_key(:street)
-      output[:address].should have_key(:state)
-    end
-
-    it 'reports a dump error with the appropriate context' do
-      person.address.should_receive(:state).and_raise("Kaboom")
-      expect {
-        person.render(view_name, context: ['special_root'])
-      }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
-    end
+  
   end
-
-
-  context 'with sub-attribute that is an Attributor::Model' do
-    it { should have_key(:full_name) }
-    it 'renders the model correctly' do
-      output[:full_name].should be_kind_of(Hash)
-      output[:full_name].should have_key(:first)
-      output[:full_name].should have_key(:last)
-    end
-  end
-
- end
 
 end

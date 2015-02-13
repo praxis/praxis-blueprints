@@ -2,6 +2,8 @@
 
 ## next
 
+* Fixed `Blueprint.describe` to output the proper `:id`. That is: the 'id` from the Class name, rather than the internal Struct attribute.
+
 ## 1.2.0
 
 * `Blueprint` readers now always `load` the value for an attribute before returning it.
