@@ -6,7 +6,7 @@
   * This can be set when defining the view with `Blueprint.view`, and defaults to false. For example: `view :default, include_nil: true { ... }`.
 * Fixed `Blueprint.describe` to output the proper `:id`. That is: the 'id` from the Class name, rather than the internal Struct attribute.
 * Fixed `Blueprint.dump(nil)` raising a `NoMethodError`
-
+* Fixed `Blueprint.load(nil)` to properly support the `recurse` option.
 
 ## 1.2.0
 
