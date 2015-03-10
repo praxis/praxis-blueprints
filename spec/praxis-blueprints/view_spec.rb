@@ -36,10 +36,10 @@ describe Praxis::View do
 
     context 'with default rendering options' do
       it 'attributor works right' do
-        person.key?(:name).should be(true)
-        person.key?(:email).should be(true)
-        person.key?(:age).should be(false)
-        person.key?(:address).should be(true)
+        person.object.key?(:name).should be(true)
+        person.object.key?(:email).should be(true)
+        person.object.key?(:age).should be(false)
+        person.object.key?(:address).should be(true)
 
         person.name.should eq('Bob')
         person.email.should eq(nil)
@@ -67,49 +67,20 @@ describe Praxis::View do
 
       subject(:output) { view.to_hash(person) }
 
-      it 'includes set attributes with nil values' do
+      it 'includes attributes attributes with nil values' do
         output.key?(:email).should be(true)
         output[:email].should be(nil)
 
         output.key?(:address).should be(true)
         output[:address].should be(nil)
-      end
 
-      it 'does not include unset attributes' do
-        output.key?(:age).should_not be(true)
-      end
-
-    end
-
-    context 'with include_unset: true' do
-      let(:view) do
-        Praxis::View.new(:info, Person, include_unset: true) do
-          attribute :name
-          attribute :email
-          attribute :age
-          attribute :address
-          attribute :prior_addresses
-        end
-      end
-      subject(:output) { view.to_hash(person) }
-
-      it 'includes set attributes with nil values' do
-        output.key?(:email).should be(true)
-        output[:email].should be(nil)
-
-        output.key?(:address).should be(true)
-        output[:address].should be(nil)
-      end
-
-      it 'includes unset attributes' do
         output.key?(:age).should be(true)
         output[:age].should be(nil)
-
-        output.key?(:prior_addresses).should be(true)
-        output[:prior_addresses].should be(nil)        
       end
 
     end
+
+  
   end
 
 

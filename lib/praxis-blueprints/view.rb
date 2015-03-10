@@ -6,7 +6,6 @@ module Praxis
     attr_reader :name
     attr_reader :options
 
-    attr_reader :include_unset
     attr_reader :include_nil
 
     def initialize(name, schema, **options, &block)
@@ -15,15 +14,7 @@ module Praxis
       @contents = ::Hash.new
       @block = block
 
-      @include_unset = options.fetch(:include_unset, false)
-      # implicitly set include_nil to true when include_unset is true
-      @include_nil = options.fetch(:include_nil, @include_unset)
-
-      if @include_unset && !@include_nil
-        msg = "Error while defining view with name #{name.inspect} for schema #{schema.inspect}."
-        msg += " include_nil may not be false if include_unset is true"
-        raise ArgumentError, msg
-      end
+      @include_nil = options.fetch(:include_nil, false)
 
       @options = options
 
@@ -54,16 +45,6 @@ module Praxis
         end
 
         if value.nil?
-          unless @include_unset
-            if object.respond_to?(:key?)
-              next unless object.key?(name)
-            else
-              msg = "WARNING: #{object} does not respond to :key? during rendering for #{Attributor.humanize_context(context)}. "
-              msg += "Can not check key #{name.inspect} is set, but include_unset option is true."
-              warn msg
-            end
-          end
-
           next unless @include_nil
         end
         

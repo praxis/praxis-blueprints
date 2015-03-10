@@ -309,12 +309,6 @@ module Praxis
       @validating = false
     end
 
-
-    # Test for existance of +key+ on wrapped +@object+
-    def key?(key)
-      @object.key?(key)
-    end
-
   end
 
 end
