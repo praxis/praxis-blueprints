@@ -3,7 +3,9 @@ class Person < Praxis::Blueprint
   attributes do
     attribute :name, String, example: /[:first_name:]/
     attribute :email, String, example: proc { |person| "#{person.name}@example.com" }
-    
+
+    attribute :age, Integer
+
     attribute :full_name, FullName
     attribute :aliases, Attributor::Collection.of(FullName)
 
@@ -36,8 +38,21 @@ class Person < Praxis::Blueprint
   view :extended do
     attribute :name
     attribute :full_name
+    attribute :age
     attribute :address
     attribute :alive
+  end
+
+  view :with_nil, include_nil: true do
+    attribute :name
+    attribute :email
+    attribute :age
+  end
+
+  view :with_unset, include_unset: true  do
+    attribute :name
+    attribute :email
+    attribute :age
   end
 
 end
