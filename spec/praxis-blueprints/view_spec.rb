@@ -15,14 +15,83 @@ describe Praxis::View do
 
   subject(:output) { view.to_hash(person) }
 
-  
+
   it 'can generate examples' do
     view.example.should have_key(:name)
   end
 
+  context 'swanky rendering options' do
+    let(:view) do
+      Praxis::View.new(:info, Person) do
+        attribute :name
+        attribute :email
+        attribute :age
+        attribute :address
+      end
+    end
+
+    let(:data) { {name: 'Bob', email: nil, address: nil } }
+
+    let(:person) { Person.load(data) }
+
+    context 'with default rendering options' do
+      it 'attributor works right' do
+        person.object.key?(:name).should be(true)
+        person.object.key?(:email).should be(true)
+        person.object.key?(:age).should be(false)
+        person.object.key?(:address).should be(true)
+
+        person.name.should eq('Bob')
+        person.email.should eq(nil)
+        person.age.should eq(nil)
+        person.address.should eq(nil)
+      end
+
+      it 'renders existing, non-nil, attributes' do
+        output.key?(:name).should be(true)
+        output.key?(:email).should_not be(true)
+        output.key?(:age).should_not be(true)
+        output.key?(:address).should_not be(true)
+      end
+    end
+
+    context 'with include_nil: true' do
+      let(:view) do
+        Praxis::View.new(:info, Person, include_nil: true) do
+          attribute :name
+          attribute :email
+          attribute :age
+          attribute :address
+        end
+      end
+
+      subject(:output) { view.to_hash(person) }
+
+      it 'includes attributes with nil values' do
+        output.key?(:email).should be(true)
+        output[:email].should be(nil)
+
+        output.key?(:address).should be(true)
+        output[:address].should be(nil)
+
+        output.key?(:age).should be(true)
+        output[:age].should be(nil)
+      end
+
+    end
+
+  
+  end
+
+
+
   context 'direct attributes' do
+
+    let(:person) { Person.load(person_data) }
     context 'with undisputably existing values' do
-      let(:person) { OpenStruct.new(:name=>'somename', :alive=>true)}
+
+      let(:person_data) { {name:'somename', alive:true} }
+
       let(:expected_output) do
         {
           :name => 'somename',
@@ -34,10 +103,11 @@ describe Praxis::View do
       end
     end
     context 'with nil values' do
-      let(:person) { OpenStruct.new(:name=>'alive_is_nil', :alive=>nil)}
+      let(:person_data) { {name:'alive_is_nil', alive: nil} }
       let(:expected_output) do
         {
-          :name => 'alive_is_nil'
+          name: 'alive_is_nil',
+          alive: true
         }
       end
       it 'are skipped completely' do
@@ -46,7 +116,7 @@ describe Praxis::View do
     end
 
     context 'with false values' do
-      let(:person) { OpenStruct.new(:name=>'alive_is_false', :alive=>false)}
+      let(:person_data) { {name:'alive_is_false', alive:false} }
       let(:expected_output) do
         {
           :name => 'alive_is_false',
@@ -181,10 +251,8 @@ describe Praxis::View do
     end
 
     context 'when the related object is nil (does not respond to the related method)' do
-      let(:resource) { OpenStruct.new(name: "Bob") }
-      let(:person) { Person.new(resource) }
+      let(:person) { Person.load(name: 'Bob') }
 
-      
       let(:view) do
         Praxis::View.new(:default, Person) do
           attribute :name
@@ -242,7 +310,7 @@ describe Praxis::View do
     end
 
   end
- 
+
 
   context '#describe' do
     subject(:description) { view.describe}
@@ -250,7 +318,7 @@ describe Praxis::View do
     its([:type]) { should eq(:standard) }
     context 'returns attributes' do
       subject { description[:attributes] }
-      
+
       its(:keys){ should == [:name,:alive,:address]  }
 
       it 'should return empty hashes for attributes with no specially defined view' do

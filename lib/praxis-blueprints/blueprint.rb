@@ -3,6 +3,7 @@ require 'ostruct'
 # Blueprint ==
 #   - part implementation definition for attributes
 #   - part container for views
+
 module Praxis
   class Blueprint
     include Attributor::Type
@@ -63,7 +64,7 @@ module Praxis
           hash[view_name] = view.describe
         end
       end
-      
+
       description
     end
 
@@ -110,11 +111,14 @@ module Praxis
 
     def self.load(value,context=Attributor::DEFAULT_ROOT_CONTEXT, **options)
       case value
-      when nil, self
+      when self
         value
-      when Hash, String
+      when nil, Hash, String
         # Need to parse/deserialize first
-        self.new(self.attribute.load(value,context, **options))
+        # or apply default/recursive loading options if necessary
+        if (value = self.attribute.load(value,context, **options))
+          self.new(value)
+        end
       else
         # Just wrap whatever value
         self.new(value)
@@ -171,17 +175,77 @@ module Praxis
     end
 
 
-    def self.view(name, &block)
+    def self.view(name, **options, &block)
       if block_given?
-        return self.views[name] = View.new(name, self, &block)
+        return self.views[name] = View.new(name, self, **options, &block)
       end
 
       self.views[name]
     end
 
     def self.dump(object, view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
-      object = self.load(object, context)
+      object = self.load(object, context, **opts)
+      return nil if object.nil?
+
       object.render(view, context: context)
+    end
+
+    # Internal finalize! logic
+    def self._finalize!
+      if @block
+        self.define_attribute!
+        self.define_readers!
+        # Don't blindly override a master view if the MediaType wants to define it on its own
+        self.generate_master_view! unless self.view(:master)
+      end
+      super
+    end
+
+    def self.define_attribute!
+      @attribute = Attributor::Attribute.new(Attributor::Struct, @options, &@block)
+      @block = nil
+      self.const_set(:Struct, @attribute.type)
+    end
+
+    def self.define_readers!
+      self.attributes.each do |name, attribute|
+        name = name.to_sym
+
+        # Don't redefine existing methods
+        next if self.instance_methods.include? name
+
+        define_reader! name
+      end
+    end
+
+
+    def self.define_reader!(name)
+      attribute = self.attributes[name]
+      # TODO: profile and optimize
+      # because we use the attribute in the reader,
+      # it's likely faster to use define_method here
+      # than module_eval, but we should make sure.
+      define_method(name) do
+        if @decorators && @decorators.respond_to?(name)
+          @decorators.send(name)
+        else
+          value = @object.__send__(name)
+          return value if value.nil? || value.kind_of?(attribute.type)
+          attribute.load(value)
+        end
+      end
+    end
+
+
+    def self.generate_master_view!
+      attributes = self.attributes
+      view :master do
+        attributes.each do | name, attr |
+          # Note: we can freely pass master view for attributes that aren't blueprint/containers because
+          # their dump methods will ignore it (they always dump everything regardless)
+          attribute name, view: :master
+        end
+      end
     end
 
 
@@ -217,94 +281,11 @@ module Praxis
     ensure
       @active_renders.delete view_name
     end
-
-
     alias_method :to_hash, :render
 
 
     def dump(view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT)
       self.render(view, context: context)
-    end
-
-    # Internal finalize! logic
-    def self._finalize!
-      if @block
-        self.define_attribute!
-        self.define_readers!
-        # Don't blindly override a master view if the MediaType wants to define it on its own
-        self.generate_master_view! unless self.view(:master)
-      end
-      super
-    end
-
-    def self.define_attribute!
-      @attribute = Attributor::Attribute.new(Attributor::Struct, @options, &@block)
-      @block = nil
-      self.const_set(:Struct, @attribute.type)
-    end
-
-    def self.define_readers!
-      self.attributes.each do |name, attribute|
-        name = name.to_sym
-
-        # Don't redefine existing methods
-        next if self.instance_methods.include? name
-
-        define_reader! name
-      end
-    end
-
-
-    def self.define_reader!(name)
-      attribute = self.attributes[name]
-      if attribute.type < Praxis::Blueprint
-        define_blueprint_reader!(name)
-      else
-        define_direct_reader!(name)
-      end
-    end
-
-    def self.define_blueprint_reader!(name)
-      # it's faster to use define_method in this case than module_eval
-      # because we save the attribute lookup on every access.
-      attribute = self.attributes[name]
-      define_method(name) do
-       if @decorators && @decorators.respond_to?(name)
-         @decorators.send(name)
-       else
-         value = @object.send(name)
-         return value if value.nil? || value.kind_of?(attribute.type)
-         attribute.type.load(value)
-       end
-      end
-    end
-
-    def self.define_direct_reader!(name)
-      attribute = self.attributes[name]
-      # TODO: profile and optimize
-      # because we use the attribute in the reader, 
-      # it's likely faster to use define_method here 
-      # than module_eval, but we should make sure.
-      define_method(name) do
-       if @decorators && @decorators.respond_to?(name)
-         @decorators.send(name)
-       else
-         value = @object.__send__(name)
-         return value if value.nil? || value.kind_of?(attribute.type)
-         attribute.load(value)
-       end
-      end
-    end
-
-    def self.generate_master_view!
-      attributes = self.attributes
-      view :master do
-        attributes.each do | name, attr |
-          # Note: we can freely pass master view for attributes that aren't blueprint/containers because
-          # their dump methods will ignore it (they always dump everything regardless)
-          attribute name, view: :master
-        end
-      end
     end
 
 
@@ -327,7 +308,6 @@ module Praxis
     ensure
       @validating = false
     end
-
 
   end
 

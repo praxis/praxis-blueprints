@@ -1,16 +1,24 @@
 module Praxis
 
   class View
-    attr_reader :schema, :contents, :name
+    attr_reader :schema
+    attr_reader :contents
+    attr_reader :name
+    attr_reader :options
 
+    attr_reader :include_nil
 
-    def initialize(name, schema, &block)
+    def initialize(name, schema, **options, &block)
       @name = name
       @schema = schema
       @contents = ::Hash.new
       @block = block
-    end
 
+      @include_nil = options.fetch(:include_nil, false)
+
+      @options = options
+
+    end
 
     def contents
       if @block
@@ -23,15 +31,22 @@ module Praxis
 
 
     def dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
+
       self.contents.each_with_object({}) do |(name, (dumpable, dumpable_opts)), hash|
-        next unless object.respond_to?(name)
+        unless object.respond_to?(name)
+          warn "#{object} does not respond to #{name} during rendering???"
+          next
+        end
 
         begin
           value = object.send(name)
         rescue => e
           raise Attributor::DumpError, context: context, name: name, type: object.class, original_exception: e
         end
-        next if value.nil?
+
+        if value.nil?
+          next unless @include_nil
+        end
         
         # FIXME: this is such an ugly way to do this. Need attributor#67.
         if dumpable.kind_of?(View) || dumpable.kind_of?(CollectionView)
