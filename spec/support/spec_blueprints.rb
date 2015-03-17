@@ -43,12 +43,6 @@ class Person < Praxis::Blueprint
     attribute :alive
   end
 
-  view :with_nil, include_nil: true do
-    attribute :name
-    attribute :email
-    attribute :age
-  end
-
   view :with_unset, include_unset: true  do
     attribute :name
     attribute :email

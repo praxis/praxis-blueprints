@@ -67,7 +67,7 @@ describe Praxis::View do
 
       subject(:output) { view.to_hash(person) }
 
-      it 'includes attributes attributes with nil values' do
+      it 'includes attributes with nil values' do
         output.key?(:email).should be(true)
         output[:email].should be(nil)
 
