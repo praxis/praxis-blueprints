@@ -1,10 +1,12 @@
 # praxis-blueprints changelog
 
-## next 
+## next
+
+* Improve error for nonexistent view attributes in media type
 
 ## 1.3.0
 
-* Added `include_nil` option to `View` for refining the rendering of nil values. 
+* Added `include_nil` option to `View` for refining the rendering of nil values.
   * This can be set when defining the view with `Blueprint.view`, and defaults to false. For example: `view :default, include_nil: true { ... }`.
 * Fixed `Blueprint.describe` to output the proper `:id`. That is: the 'id` from the Class name, rather than the internal Struct attribute.
 * Fixed `Blueprint.dump(nil)` raising a `NoMethodError`

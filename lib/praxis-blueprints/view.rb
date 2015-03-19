@@ -47,7 +47,7 @@ module Praxis
         if value.nil?
           next unless @include_nil
         end
-        
+
         # FIXME: this is such an ugly way to do this. Need attributor#67.
         if dumpable.kind_of?(View) || dumpable.kind_of?(CollectionView)
           new_context = context + [name]
@@ -70,7 +70,7 @@ module Praxis
       raise AttributorException, "Attribute names must be symbols, got: #{name.inspect}" unless name.kind_of? ::Symbol
 
       attribute = self.schema.attributes.fetch(name) do
-        raise "Attribute '#{name}' does not exist in #{self.schema}"
+        raise "Displaying :#{name} is not allowed in view :#{self.name} of #{self.schema}. This attribute does not exist in the mediatype"
       end
 
       if block_given?
