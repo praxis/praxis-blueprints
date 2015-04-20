@@ -4,6 +4,8 @@ describe Praxis::Blueprint do
 
   subject(:blueprint_class) { Person }
 
+  its(:family){ should eq('hash') }
+
   context 'deterministic examples' do
     it 'works' do
       person_1 = Person.example('person 1')

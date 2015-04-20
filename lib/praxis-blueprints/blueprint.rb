@@ -53,6 +53,9 @@ module Praxis
       blueprint
     end
 
+    def self.family
+      'hash'
+    end
 
     def self.describe(shallow=false)
       type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
