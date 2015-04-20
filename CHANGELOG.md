@@ -3,6 +3,7 @@
 ## next
 
 * Improve error for nonexistent view attributes in media type
+* Added `family` method to Blueprints to follow the new `Attributor` practices.
 
 ## 1.3.0
 
