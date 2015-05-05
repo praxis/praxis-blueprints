@@ -2,6 +2,7 @@
 
 ## next
 
+* Fix `Blueprint.new` handling of caching when the wrapped object responds to `identity_map`, but does not have one set.
 
 ## 1.3.1
 

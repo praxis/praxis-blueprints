@@ -35,7 +35,7 @@ module Praxis
       if @@caching_enabled && decorators.nil?
         key = object
 
-        cache = if object.respond_to?(:identity_map)
+        cache = if object.respond_to?(:identity_map) && object.identity_map
           object.identity_map.blueprint_cache[self]
         else
           self.cache
