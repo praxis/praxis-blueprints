@@ -31,8 +31,14 @@ module Praxis
 
 
     def dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
+      fields = opts[:fields]
+      # Restrict which attributes to output if we receive a fields parameter
+      # Note: should we complain if any of the names in "fields" do not match an existing attribute name?
+      attributes_to_render = self.contents.keys
+      attributes_to_render &= fields.keys if fields
 
-      self.contents.each_with_object({}) do |(name, (dumpable, dumpable_opts)), hash|
+      attributes_to_render.each_with_object({}) do |name, hash|
+        dumpable, dumpable_opts = self.contents[name]
         unless object.respond_to?(name)
           warn "#{object} does not respond to #{name} during rendering???"
           next
@@ -51,12 +57,16 @@ module Praxis
         # FIXME: this is such an ugly way to do this. Need attributor#67.
         if dumpable.kind_of?(View) || dumpable.kind_of?(CollectionView)
           new_context = context + [name]
-          hash[name] = dumpable.dump(value, context: new_context ,**(dumpable_opts||{}))
+
+          sub_opts = add_subfield_options( fields, name, dumpable_opts )
+          hash[name] = dumpable.dump(value, context: new_context ,**sub_opts)
         else
+
           type = dumpable.type
           if type.respond_to?(:attributes) || type.respond_to?(:member_attribute)
             new_context = context + [name]
-            hash[name] = dumpable.dump(value, context: new_context ,**(dumpable_opts||{}))
+            sub_opts = add_subfield_options( fields, name, dumpable_opts )
+            hash[name] = dumpable.dump(value, context: new_context ,**sub_opts)
           else
             hash[name] = value
           end
@@ -64,7 +74,6 @@ module Praxis
       end
     end
     alias_method :to_hash, :dump
-
 
     def attribute(name, opts={}, &block)
       raise AttributorException, "Attribute names must be symbols, got: #{name.inspect}" unless name.kind_of? ::Symbol
@@ -104,5 +113,13 @@ module Praxis
       { attributes: view_attributes, type: :standard }
     end
 
+    private
+    def add_subfield_options( fields, name, existing_options)
+      sub_opts = if fields && fields[name]
+        {fields: fields[name] }
+      else
+        {}
+      end.merge(existing_options || {})
+    end
   end
 end

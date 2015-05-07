@@ -197,7 +197,7 @@ module Praxis
       object = self.load(object, context, **opts)
       return nil if object.nil?
 
-      object.render(view, context: context)
+      object.render(view, context: context, **opts)
     end
 
     # Internal finalize! logic
@@ -278,7 +278,7 @@ module Praxis
 
 
     # Render the wrapped data with the given view
-    def render(view_name=:default, context: Attributor::DEFAULT_ROOT_CONTEXT)
+    def render(view_name=:default, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
       unless (view = self.class.views[view_name])
         raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
       end
@@ -287,7 +287,11 @@ module Praxis
       return CIRCULAR_REFERENCE_MARKER if @active_renders.include?(view_name)
       @active_renders << view_name
 
-      @rendered_views[view_name] = view.dump(self, context: context)
+      case opts[:fields]
+      when Array # Accept a simple array of fields, and transform it to a 1-level hash with nil values
+        opts[:fields] = opts[:fields].each_with_object({}) {|field, hash| hash[field] = nil }
+      end
+      @rendered_views[view_name] = view.dump(self, context: context,**opts)
     ensure
       @active_renders.delete view_name
     end

@@ -4,6 +4,9 @@
 
 * Fix `Blueprint.new` handling of caching when the wrapped object responds to `identity_map`, but does not have one set.
 * Undefine JRuby package helper methods in `Model` (org, java...)
+* Added support for rendering custom views
+  * Internally, a `View` object can now be dumped passing a `:fields` option (which is a hash, that can recursively will define which sub-attributes to render along the way). See [this spec](https://github.com/rightscale/praxis-blueprints/blob/master/spec/praxis-blueprints/blueprint_spec.rb) for an example.
+  * `Blueprints` will also accept the `:fields` option (with the same hash syntax), but it will also accept an array to imply the list of top-level attributes to render (when recursion is not necessary)
 
 ## 1.3.1
 

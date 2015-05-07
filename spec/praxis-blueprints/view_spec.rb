@@ -12,8 +12,8 @@ describe Praxis::View do
       attribute :address, view: :state
     end
   end
-
-  subject(:output) { view.to_hash(person) }
+  let(:dumping_options){ {} }
+  subject(:output) { view.to_hash(person, dumping_options ) }
 
 
   it 'can generate examples' do
@@ -53,7 +53,22 @@ describe Praxis::View do
         output.key?(:age).should_not be(true)
         output.key?(:address).should_not be(true)
       end
+
+      context 'and custom field rendering' do
+        let(:data) { {name: 'Bob', email: 'bob@acme.org', age: 50 } }
+
+        context 'renders only the specified fields that have values' do
+          let(:dumping_options){ { fields: {name: nil, email: nil} } }
+          its(:keys){ should == [:name, :email] }
+        end
+
+        context 'renders only the specified fields excluding nil valued ones' do
+          let(:dumping_options){ { fields: {name: nil, address: nil} } }
+          its(:keys){ should == [:name] }
+        end
+      end
     end
+
 
     context 'with include_nil: true' do
       let(:view) do
@@ -64,8 +79,6 @@ describe Praxis::View do
           attribute :address
         end
       end
-
-      subject(:output) { view.to_hash(person) }
 
       it 'includes attributes with nil values' do
         output.key?(:email).should be(true)
@@ -78,9 +91,16 @@ describe Praxis::View do
         output[:age].should be(nil)
       end
 
+      context 'and custom field rendering' do
+        let(:data) { {name: 'Bob', email: 'bob@acme.org', age: 50 } }
+
+        context 'renders only the specified fields including nil valued' do
+          let(:dumping_options){ { fields: {name: nil, address: nil}} }
+          its(:keys){ should == [:name,:address] }
+        end
+      end
     end
 
-  
   end
 
 
@@ -199,6 +219,21 @@ describe Praxis::View do
 
 
       it { should eq expected_output }
+
+      context 'using the fields option' do
+        let(:dumping_options){ { fields: {name: nil, address: {state: nil} } } }
+
+        let(:expected_output) do
+          {
+            :name => person.name,
+            :address => {
+              :state => address.state
+            }
+          }
+        end
+
+        it { should eq expected_output }
+      end
 
     end
 

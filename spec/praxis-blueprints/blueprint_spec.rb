@@ -350,6 +350,23 @@ describe Praxis::Blueprint do
       end
     end
 
+    context 'using the `fields` option' do
+      context 'as a hash' do
+        subject(:output) { person.render(view_name, fields: {address: { state: nil} } ) }
+        it 'should only have the address rendered' do
+          output.keys.should == [:address]
+        end
+        it 'address should only have state' do
+          output[:address].keys.should == [:state]
+        end
+      end
+      context 'as a simple array' do
+        subject(:output) { person.render(view_name, fields: [:address] ) }
+        it 'accepts it as the list of top-level attributes to be rendered' do
+          output.keys.should == [:address]
+        end
+      end
+    end
   end
 
 end
