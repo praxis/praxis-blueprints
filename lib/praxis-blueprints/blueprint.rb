@@ -9,6 +9,13 @@ module Praxis
     include Attributor::Type
     extend Finalizable
 
+    if RUBY_ENGINE =~ /^jruby/
+      # We are "forced" to require it here (in case hasn't been yet) to make sure the added methods have been applied
+      require 'java'
+      # Only to then delete them, to make sure we don't have them clashing with any attributes
+      undef java, javax, org, com
+    end
+
     @@caching_enabled = false
 
     CIRCULAR_REFERENCE_MARKER = '...'.freeze
