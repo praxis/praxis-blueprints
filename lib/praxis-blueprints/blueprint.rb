@@ -197,7 +197,7 @@ module Praxis
       object = self.load(object, context, **opts)
       return nil if object.nil?
 
-      object.render(view, context: context)
+      object.render(view, context: context, **opts)
     end
 
     # Internal finalize! logic
@@ -278,18 +278,29 @@ module Praxis
 
 
     # Render the wrapped data with the given view
-    def render(view_name=:default, context: Attributor::DEFAULT_ROOT_CONTEXT)
+    def render(view_name=:default, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
       unless (view = self.class.views[view_name])
         raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
       end
 
-      return @rendered_views[view_name] if @rendered_views.has_key? view_name
-      return CIRCULAR_REFERENCE_MARKER if @active_renders.include?(view_name)
-      @active_renders << view_name
+      rendered_key = if fields = opts[:fields]
+        if fields.is_a? Array
+          # Accept a simple array of fields, and transform it to a 1-level hash with nil values
+          opts[:fields] = opts[:fields].each_with_object({}) {|field, hash| hash[field] = nil }
+        end
+        # Rendered key needs to be different if only some fields were output
+        "%s:#%s" % [view_name, opts[:fields].hash.to_s]
+      else
+        view_name
+      end
 
-      @rendered_views[view_name] = view.dump(self, context: context)
+      return @rendered_views[rendered_key] if @rendered_views.has_key? rendered_key
+      return CIRCULAR_REFERENCE_MARKER if @active_renders.include?(rendered_key)
+      @active_renders << rendered_key
+
+      @rendered_views[rendered_key] = view.dump(self, context: context,**opts)
     ensure
-      @active_renders.delete view_name
+      @active_renders.delete rendered_key
     end
     alias_method :to_hash, :render
 

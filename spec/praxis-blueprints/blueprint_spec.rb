@@ -321,7 +321,49 @@ describe Praxis::Blueprint do
   context '#render' do
     let(:person) { Person.example }
     let(:view_name) { :default }
-    subject(:output) { person.render(view_name) }
+    let(:render_opts) { {} }
+    subject(:output) { person.render(view_name, render_opts) }
+
+    context 'caches rendered views' do
+      it 'in the instance, by view name'  do
+        person.instance_variable_get(:@rendered_views)[view_name].should be_nil
+        person.render(view_name)
+        cached = person.instance_variable_get(:@rendered_views)[view_name]
+        cached.should_not be_nil
+      end
+
+      it 'and does not re-render a view if one is already cached'  do
+        rendered1 = person.render(view_name)
+        rendered2 = person.render(view_name)
+        rendered1.should be(rendered2)
+      end
+
+      context 'even when :fields are specified' do
+        let(:render_opts) { {fields: {email: nil, age: nil, address: {street: nil, state: nil}}} }
+
+        it 'caches the output in a different key than just the view_name' do
+          plain_view_render = person.render(view_name)
+          fields_render = person.render(view_name, render_opts)
+          plain_view_render.should_not be(fields_render)
+        end
+
+        it 'it still caches the object if rendered for the same fields'  do
+          rendered1 = person.render(view_name, render_opts)
+          rendered2 = person.render(view_name, render_opts)
+          rendered1.should be(rendered2)
+        end
+
+        it 'it still caches the object if rendered for the same fields (even from an "equivalent" hash)'  do
+          rendered1 = person.render(view_name, render_opts)
+
+          equivalent_render_opts = { fields: {age: nil, address: {state: nil, street: nil}, email: nil} }
+          rendered2 = person.render(view_name, equivalent_render_opts)
+
+          rendered1.should be(rendered2)
+        end
+      end
+
+    end
 
     context 'with a sub-attribute that is a blueprint' do
 
@@ -350,6 +392,23 @@ describe Praxis::Blueprint do
       end
     end
 
+    context 'using the `fields` option' do
+      context 'as a hash' do
+        subject(:output) { person.render(view_name, fields: {address: { state: nil} } ) }
+        it 'should only have the address rendered' do
+          output.keys.should == [:address]
+        end
+        it 'address should only have state' do
+          output[:address].keys.should == [:state]
+        end
+      end
+      context 'as a simple array' do
+        subject(:output) { person.render(view_name, fields: [:address] ) }
+        it 'accepts it as the list of top-level attributes to be rendered' do
+          output.keys.should == [:address]
+        end
+      end
+    end
   end
 
 end
