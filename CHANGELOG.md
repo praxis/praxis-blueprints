@@ -8,6 +8,8 @@
   * Internally, a `View` object can now be dumped passing a `:fields` option (which is a hash, that can recursively will define which sub-attributes to render along the way). See [this spec](https://github.com/rightscale/praxis-blueprints/blob/master/spec/praxis-blueprints/blueprint_spec.rb) for an example.
   * `Blueprints` will also accept the `:fields` option (with the same hash syntax), but it will also accept an array to imply the list of top-level attributes to render (when recursion is not necessary)
   * Caching of rendered blueprints will continue to work if the view is re-rendered with equivalent `:fields`
+* Deprecate `Blueprint.render(view_name,...) positional param
+  * Please use :view named parameter instead. I.e., `render(:default, context: ...)`  => `render(view: :default, context: ...)`
 
 ## 1.3.1
 

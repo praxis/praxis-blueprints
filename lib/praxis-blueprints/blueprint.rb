@@ -278,7 +278,15 @@ module Praxis
 
 
     # Render the wrapped data with the given view
-    def render(view_name=:default, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
+    def render(view_name=nil, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
+      if view_name != nil
+        warn "DEPRECATED: please do not pass the view name as the first parameter in Blueprint.render, pass through the view: named param instead."
+      else
+        view_name = :default # Backwards compatibility with the default param value
+      end
+
+      # Allow the opts to specify the view name for consistency with dump (overriding the deprecated named param)
+      view_name = opts[:view] if opts[:view]
       unless (view = self.class.views[view_name])
         raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
       end
