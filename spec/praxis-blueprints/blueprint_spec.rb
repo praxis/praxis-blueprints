@@ -95,7 +95,7 @@ describe Praxis::Blueprint do
 
       context '#render' do
         let(:view) { :default }
-        subject(:output) { blueprint_instance.render(view) }
+        subject(:output) { blueprint_instance.render(view: view) }
 
         it { should have_key(:name) }
         it 'has the right values' do
@@ -318,23 +318,32 @@ describe Praxis::Blueprint do
     end
   end
 
+  context '.render' do
+    let(:person) { Person.example }
+    it 'is an alias to dump' do
+      rendered = Person.render(person, view: :default)
+      dumped = Person.dump(person, view: :default)
+      expect(rendered).to eq(dumped)
+    end
+  end
+
   context '#render' do
     let(:person) { Person.example }
     let(:view_name) { :default }
     let(:render_opts) { {} }
-    subject(:output) { person.render(view_name, render_opts) }
+    subject(:output) { person.render(view: view_name, **render_opts) }
 
     context 'caches rendered views' do
       it 'in the instance, by view name'  do
         person.instance_variable_get(:@rendered_views)[view_name].should be_nil
-        person.render(view_name)
+        person.render(view: view_name)
         cached = person.instance_variable_get(:@rendered_views)[view_name]
         cached.should_not be_nil
       end
 
       it 'and does not re-render a view if one is already cached'  do
-        rendered1 = person.render(view_name)
-        rendered2 = person.render(view_name)
+        rendered1 = person.render(view: view_name)
+        rendered2 = person.render(view: view_name)
         rendered1.should be(rendered2)
       end
 
@@ -342,22 +351,22 @@ describe Praxis::Blueprint do
         let(:render_opts) { {fields: {email: nil, age: nil, address: {street: nil, state: nil}}} }
 
         it 'caches the output in a different key than just the view_name' do
-          plain_view_render = person.render(view_name)
-          fields_render = person.render(view_name, render_opts)
+          plain_view_render = person.render(view: view_name)
+          fields_render = person.render(view: view_name, **render_opts)
           plain_view_render.should_not be(fields_render)
         end
 
         it 'it still caches the object if rendered for the same fields'  do
-          rendered1 = person.render(view_name, render_opts)
-          rendered2 = person.render(view_name, render_opts)
+          rendered1 = person.render(view: view_name, **render_opts)
+          rendered2 = person.render(view: view_name, **render_opts)
           rendered1.should be(rendered2)
         end
 
         it 'it still caches the object if rendered for the same fields (even from an "equivalent" hash)'  do
-          rendered1 = person.render(view_name, render_opts)
+          rendered1 = person.render(view: view_name, **render_opts)
 
           equivalent_render_opts = { fields: {age: nil, address: {state: nil, street: nil}, email: nil} }
-          rendered2 = person.render(view_name, equivalent_render_opts)
+          rendered2 = person.render(view: view_name, **equivalent_render_opts)
 
           rendered1.should be(rendered2)
         end
@@ -377,7 +386,7 @@ describe Praxis::Blueprint do
       it 'reports a dump error with the appropriate context' do
         person.address.should_receive(:state).and_raise("Kaboom")
         expect {
-          person.render(view_name, context: ['special_root'])
+          person.render(view: view_name, context: ['special_root'])
         }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
       end
     end
@@ -394,7 +403,7 @@ describe Praxis::Blueprint do
 
     context 'using the `fields` option' do
       context 'as a hash' do
-        subject(:output) { person.render(view_name, fields: {address: { state: nil} } ) }
+        subject(:output) { person.render(view: view_name, fields: {address: { state: nil} } ) }
         it 'should only have the address rendered' do
           output.keys.should == [:address]
         end
@@ -403,7 +412,7 @@ describe Praxis::Blueprint do
         end
       end
       context 'as a simple array' do
-        subject(:output) { person.render(view_name, fields: [:address] ) }
+        subject(:output) { person.render(view: view_name, fields: [:address] ) }
         it 'accepts it as the list of top-level attributes to be rendered' do
           output.keys.should == [:address]
         end

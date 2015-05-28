@@ -318,7 +318,7 @@ describe Praxis::View do
       let(:expected_output) do
         {
           :name => person.name,
-          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(:default)}
+          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(view: :default)}
         }
       end
 
@@ -337,7 +337,7 @@ describe Praxis::View do
       let(:expected_output) do
         {
           :name => person.name,
-          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(:state)}
+          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(view: :state)}
         }
       end
 

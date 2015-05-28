@@ -197,7 +197,12 @@ module Praxis
       object = self.load(object, context, **opts)
       return nil if object.nil?
 
-      object.render(view, context: context, **opts)
+      object.render(view: view, context: context, **opts)
+    end
+
+    # Allow render on the class too, for completeness and consistency
+    def self.render(object, **opts)
+      self.dump(object, **opts)
     end
 
     # Internal finalize! logic
@@ -314,7 +319,7 @@ module Praxis
 
 
     def dump(view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT)
-      self.render(view, context: context)
+      self.render(view: view, context: context)
     end
 
 
