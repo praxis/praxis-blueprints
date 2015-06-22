@@ -1,6 +1,6 @@
 # praxis-blueprints changelog
 
-## next
+## 2.0
 
 * Fix `Blueprint.new` handling of caching when the wrapped object responds to `identity_map`, but does not have one set.
 * Undefine JRuby package helper methods in `Model` (org, java...)
