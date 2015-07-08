@@ -20,7 +20,7 @@ it results in a structured hash instead of an encoded string. Blueprints can aut
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency(%q<randexp>, ["~> 0"])
-  spec.add_runtime_dependency(%q<attributor>, ["~> 3.0"])
+  spec.add_runtime_dependency(%q<attributor>, [">= 3.0"])
   spec.add_runtime_dependency(%q<activesupport>, [">= 3"])
 
   spec.add_development_dependency "bundler", "~> 1.6"

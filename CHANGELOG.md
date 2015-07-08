@@ -1,5 +1,12 @@
 # praxis-blueprints changelog
 
+## next
+
+## 2.0.1 
+
+* relaxed attributor dependency to >= 3.0
+
+
 ## 2.0
 
 * Fix `Blueprint.new` handling of caching when the wrapped object responds to `identity_map`, but does not have one set.
