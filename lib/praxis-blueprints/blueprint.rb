@@ -64,10 +64,14 @@ module Praxis
       'hash'
     end
 
-    def self.describe(shallow=false,**opts)
+    def self.describe(shallow=false,example: nil, **opts)
       type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
 
-      description = self.attribute.type.describe(shallow,**opts).merge!(id: self.id, name: type_name)
+      if example
+        example = example.object
+      end
+
+      description = self.attribute.type.describe(shallow,example: example, **opts).merge!(id: self.id, name: type_name)
 
       unless shallow
         description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|
