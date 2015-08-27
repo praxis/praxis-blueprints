@@ -2,6 +2,13 @@
 
 ## next
 
+
+## 2.1
+
+* Fixed handling of objects passed in to `Blueprint.example`.
+* Bumped attributor dependnecy to >= 4.0.1
+
+
 ## 2.0.1 
 
 * relaxed attributor dependency to >= 3.0
