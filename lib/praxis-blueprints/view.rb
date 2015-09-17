@@ -29,7 +29,6 @@ module Praxis
       @contents
     end
 
-
     def dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
       fields = opts[:fields]
       # Restrict which attributes to output if we receive a fields parameter
@@ -92,7 +91,6 @@ module Praxis
 
     end
 
-
     def example(context=nil)
       object = self.schema.example(context)
       opts = {}
@@ -114,7 +112,7 @@ module Praxis
     end
 
     private
-    def add_subfield_options( fields, name, existing_options)
+    def add_subfield_options(fields, name, existing_options)
       sub_opts = if fields && fields[name]
         {fields: fields[name] }
       else

@@ -101,6 +101,19 @@ describe Praxis::Blueprint do
         it 'has the right values' do
           subject[:name].should eq(expected_name)
         end
+
+        it 'sends the correct ActiveSupport::Notification' do
+          notification_payload = {
+            blueprint: blueprint_instance,
+            view: blueprint_class.views[:name_only],
+            fields: nil
+          }
+          ActiveSupport::Notifications.should_receive(:instrument).
+            with('praxis.blueprint.render',notification_payload).
+            and_call_original
+
+            blueprint_instance.render(view: :name_only)
+        end
       end
 
       context 'validation' do
@@ -217,7 +230,7 @@ describe Praxis::Blueprint do
       end
     end
   end
-  
+
   context '.validate' do
     let(:hash) { {name: 'bob'} }
     let(:person) { Person.load(hash) }
