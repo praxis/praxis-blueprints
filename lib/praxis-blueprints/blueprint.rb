@@ -300,7 +300,7 @@ module Praxis
         raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
       end
 
-      rendered_key = if fields = opts[:fields]
+      rendered_key = if (fields = opts[:fields])
         if fields.is_a? Array
           # Accept a simple array of fields, and transform it to a 1-level hash with nil values
           opts[:fields] = opts[:fields].each_with_object({}) {|field, hash| hash[field] = nil }
@@ -315,7 +315,15 @@ module Praxis
       return CIRCULAR_REFERENCE_MARKER if @active_renders.include?(rendered_key)
       @active_renders << rendered_key
 
-      @rendered_views[rendered_key] = view.dump(self, context: context,**opts)
+      notification_payload = {
+        blueprint: self,
+        view: view,
+        fields: fields
+      }
+
+      ActiveSupport::Notifications.instrument 'praxis.blueprint.render'.freeze,  notification_payload do
+        @rendered_views[rendered_key] = view.dump(self, context: context,**opts)
+      end
     ensure
       @active_renders.delete rendered_key
     end

@@ -34,6 +34,9 @@ class Person < Praxis::Blueprint
     attribute :address
   end
 
+  view :name_only do
+    attribute :name
+  end
 
   view :extended do
     attribute :name
@@ -76,7 +79,7 @@ end
 
 
 class FullName < Attributor::Model
-  
+
   attributes do
     attribute :first, String, example: /[:first_name:]/
     attribute :last, String, example: /[:last_name:]/
