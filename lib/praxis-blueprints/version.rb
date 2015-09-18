@@ -1,3 +1,3 @@
 module Praxis
-  BLUEPRINTS_VERSION = "2.1"
+  BLUEPRINTS_VERSION = "2.2"
 end

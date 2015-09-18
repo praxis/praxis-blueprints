@@ -2,6 +2,11 @@
 
 ## next
 
+## 2.2
+
+* Added instrumentation through `ActiveSupport::Notifications`
+  * Use the 'praxis.blueprint.render to subscribe to `Blueprint#render` calls
+
 
 ## 2.1
 
@@ -9,7 +14,7 @@
 * Bumped attributor dependnecy to >= 4.0.1
 
 
-## 2.0.1 
+## 2.0.1
 
 * relaxed attributor dependency to >= 3.0
 
