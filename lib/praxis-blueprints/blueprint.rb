@@ -18,13 +18,15 @@ module Praxis
 
     @@caching_enabled = false
 
-    CIRCULAR_REFERENCE_MARKER = '...'.freeze
 
-    attr_accessor :object, :decorators
-    attr_reader :validating, :active_renders
+    attr_reader :validating
+    attr_accessor :object
+    attr_accessor :decorators
 
     class << self
-      attr_reader :views, :attribute, :options
+      attr_reader :views
+      attr_reader :attribute
+      attr_reader :options
       attr_accessor :reference
     end
 
@@ -34,21 +36,20 @@ module Praxis
       klass.instance_eval do
         @views = Hash.new
         @options = Hash.new
+        @domain_model = Object
       end
     end
 
     # Override default new behavior to support memoized creation through an IdentityMap
     def self.new(object, decorators=nil)
       if @@caching_enabled && decorators.nil?
-        key = object
-
         cache = if object.respond_to?(:identity_map) && object.identity_map
           object.identity_map.blueprint_cache[self]
         else
           self.cache
         end
 
-        return cache[key] ||= begin
+        return cache[object] ||= begin
           blueprint = self.allocate
           blueprint.send(:initialize, object, decorators)
           blueprint
@@ -112,6 +113,11 @@ module Praxis
     end
 
 
+    def self.domain_model(klass=nil)
+      return @domain_model if klass.nil?
+      @domain_model = klass
+    end
+
     def self.check_option!(name, value)
       case name
       when :identity
@@ -134,11 +140,19 @@ module Praxis
           self.new(value)
         end
       else
-        # Just wrap whatever value
-        self.new(value)
+        if value.kind_of?(self.domain_model) || value.kind_of?(self::Struct)
+          # Wrap the value directly
+          self.new(value)
+        else
+          # Wrap the object inside the domain_model
+          self.new(domain_model.new(value))
+        end
       end
     end
 
+    class << self
+      alias_method :from, :load
+    end
 
     def self.caching_enabled?
       @@caching_enabled
@@ -203,10 +217,8 @@ module Praxis
 
       object.render(view: view, context: context, **opts)
     end
-
-    # Allow render on the class too, for completeness and consistency
-    def self.render(object, **opts)
-      self.dump(object, **opts)
+    class << self
+      alias_method :render, :dump
     end
 
     # Internal finalize! logic
@@ -216,8 +228,15 @@ module Praxis
         self.define_readers!
         # Don't blindly override a master view if the MediaType wants to define it on its own
         self.generate_master_view! unless self.view(:master)
+        self.resolve_domain_model!
       end
       super
+    end
+
+    def self.resolve_domain_model!
+      return unless self.domain_model.kind_of?(String)
+
+      @domain_model = self.domain_model.constantize
     end
 
     def self.define_attribute!
@@ -271,69 +290,50 @@ module Praxis
     def initialize(object, decorators=nil)
       # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
+
       @decorators = if decorators.kind_of?(Hash) && decorators.any?
         OpenStruct.new(decorators)
       else
         decorators
       end
-      @rendered_views = {}
-      @validating = false
 
-      # OPTIMIZE: revisit the circular rendering tracking.
-      #           removing this results in a significant performance
-      #           and memory use savings.
-      @active_renders = []
+      @validating = false
     end
 
 
     # Render the wrapped data with the given view
-    def render(view_name=nil, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
+    def render(view_name=nil, context: Attributor::DEFAULT_ROOT_CONTEXT,renderer: Renderer.new, **opts)
       if view_name != nil
         warn "DEPRECATED: please do not pass the view name as the first parameter in Blueprint.render, pass through the view: named param instead."
-      else
-        view_name = :default # Backwards compatibility with the default param value
+      elsif opts.key?(:view)
+        view_name = opts[:view]
       end
 
-      # Allow the opts to specify the view name for consistency with dump (overriding the deprecated named param)
-      view_name = opts[:view] if opts[:view]
-      unless (view = self.class.views[view_name])
-        raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
+      fields = opts[:fields]
+      if view_name.nil? && fields.nil?
+        view_name = :default
       end
 
-      rendered_key = if (fields = opts[:fields])
-        if fields.is_a? Array
-          # Accept a simple array of fields, and transform it to a 1-level hash with nil values
-          opts[:fields] = opts[:fields].each_with_object({}) {|field, hash| hash[field] = nil }
+
+      if view_name
+        unless (view = self.class.views[view_name])
+          raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
         end
-        # Rendered key needs to be different if only some fields were output
-        "%s:#%s" % [view_name, opts[:fields].hash.to_s]
-      else
-        view_name
+        return view.render(self, context: context, renderer: renderer)
       end
 
-      return @rendered_views[rendered_key] if @rendered_views.has_key? rendered_key
-      return CIRCULAR_REFERENCE_MARKER if @active_renders.include?(rendered_key)
-      @active_renders << rendered_key
-
-      notification_payload = {
-        blueprint: self,
-        view: view,
-        fields: fields
-      }
-
-      ActiveSupport::Notifications.instrument 'praxis.blueprint.render'.freeze,  notification_payload do
-        @rendered_views[rendered_key] = view.dump(self, context: context,**opts)
+      # Accept a simple array of fields, and transform it to a 1-level hash with true values
+      if fields.is_a? Array
+        fields = fields.each_with_object({}) {|field, hash| hash[field] = true }
       end
-    ensure
-      @active_renders.delete rendered_key
+
+      # expand fields
+      expanded_fields = FieldExpander.expand(self.class, fields)
+
+      renderer.render(self, expanded_fields, context: context)
     end
     alias_method :to_hash, :render
-
-
-    def dump(view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT)
-      self.render(view: view, context: context)
-    end
-
+    alias_method :dump, :render
 
     def validate(context=Attributor::DEFAULT_ROOT_CONTEXT)
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
@@ -349,7 +349,7 @@ module Praxis
         if value.respond_to?(:validating) # really, it's a thing with sub-attributes
           next if value.validating
         end
-        errors.push *sub_attribute.validate(value, sub_context)
+        errors.push(*sub_attribute.validate(value, sub_context))
       end
     ensure
       @validating = false

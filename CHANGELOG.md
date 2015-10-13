@@ -2,6 +2,31 @@
 
 ## next
 
+
+* Added `FieldExpander`, a new class that recursively expands a tree of
+  of attributes into their lowest-level values.
+    * For example, for the `Person` and `Address` blueprints defined in
+    [spec_blueprints.rb](sped/support/spec_blueprints.rb):
+      * `FieldExpander.expand(Person, {name: true, full_name: true})` would return
+        `{name: true, full_name: {first: true, last:true}}`.
+    * Attempting to expand attributes with circular references (i.e. the
+      a person's address, where that address then references that person) will
+      raise a `Praxis::FieldExpander::CircularExpansionError` error.
+* Added `Renderer`, a new class for rendering objects (typically Blueprint
+  instances) with an explicit and recursive set of fields (as from
+  `Fieldexpander`).
+    * For example:
+      * `render(person, name: true)` would produce `{name: person.name}`
+      * `render(person, name: true, address: {state: true})` would
+        produce `{name: person.name, address: {state: person.address.state}}`
+    * Accepts an `include_nil:` option when initialized, that if true will
+      cause the renderer to output values that are nil, rather than omit them.
+* Added `Blueprint.domain_model` to specify the underlying domain model, e.g.
+  a `Praxis::Mapper::Resource`. Accepts a string value that is resolved when
+  `Blueprint.finalize!` is called.
+* Refactored `View` and `CollectionView` rendering to use a `Renderer` with
+  a set of expanded fields.
+
 ## 2.2
 
 * Added instrumentation through `ActiveSupport::Notifications`

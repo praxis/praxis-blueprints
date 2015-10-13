@@ -1,30 +1,27 @@
 module Praxis
 
-  class CollectionView
-    attr_reader :name, :schema, :using
+  class CollectionView < View
+    def initialize(name, schema, member_view=nil)
+      super(name,schema)
 
-    def initialize(name, schema, using)
-      @name = name
-      @schema = schema
-      @using = using
-    end
-
-    def dump(collection, context: Attributor::DEFAULT_ROOT_CONTEXT,**opts)
-      collection.collect.with_index do |object, i|
-        subcontext = context + ["at(#{i})"]
-        using.dump(object, context: subcontext, **opts)
+      if member_view
+        @contents = member_view.contents.clone
       end
     end
 
     def example(context=Attributor::DEFAULT_ROOT_CONTEXT)
-      collection = self.schema.example(context)
+      collection = 3.times.collect do |i|
+        subcontext = context + ["at(#{i})"]
+        self.schema.example(subcontext)
+      end
       opts = {}
       opts[:context] = context if context
-      self.dump(collection, opts)
+
+      self.render(collection, **opts)
     end
 
     def describe
-      using.describe.merge(type: :collection)
+      super.merge(type: :collection)
     end
 
   end

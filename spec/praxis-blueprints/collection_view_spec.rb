@@ -2,50 +2,78 @@ require_relative '../spec_helper'
 
 describe Praxis::CollectionView do
 
-  let(:collection_schema) { double(:collection_schema) }
+  let(:root_context) { ['people'] }
 
-  let(:people) { [Person.example('p-1'), Person.example('p-2')] }
+  let(:people) do
+    3.times.collect do |i|
+      context = ["people", "at(#{i})"]
+      Person.example(context)
+    end
+  end
 
 
-  let(:member_view) do
-    Praxis::View.new(:tiny, Person) do
+  let(:contents_definition) do
+    proc do
       attribute :name
       attribute :address, view: :state
     end
   end
 
-  let(:collection_view) do
-    Praxis::CollectionView.new(:collection_view, collection_schema, member_view)
+
+
+  let(:member_view) do
+    Praxis::View.new(:tiny, Person, &contents_definition)
   end
 
-  let(:root_context) { ['people'] }
+  let(:collection_view) do
+    Praxis::CollectionView.new(:collection_view, Person, member_view)
+  end
 
-  context '#dump' do
-    before do
-      people.each_with_index do |person, i|
-        subcontext = root_context + ["at(#{i})"]
-        expect(member_view).to(
-          receive(:dump).
-          with(person, context: subcontext).
-        and_call_original)
-      end
+
+
+  context 'creating from a member view' do
+
+    it 'gets the proper contents' do
+      collection_view.contents.should eq member_view.contents
+    end
+  end
+
+  context 'creating with a set of attributes defined in a block' do
+    let(:collection_view) do
+      Praxis::CollectionView.new(:collection_view, Person, &contents_definition)
     end
 
-    subject(:output) { collection_view.dump(people, context: root_context) }
+    it 'gets the proper contents' do
+      collection_view.contents.should eq member_view.contents
+    end
+  end
 
+  context '#render' do
+    subject(:output) { collection_view.render(people, context: root_context) }
+
+    it do
+      #people
+      #root_context
+      #collection_view
+      #binding.pry
+      #output = collection_view.render(people, context: root_context)
+
+
+
+    end
     it { should be_kind_of(Array) }
+    it { should eq people.collect {|person| member_view.render(person)} }
   end
 
   context '#example' do
     it 'generates an example from the schema and renders it' do
-      expect(collection_schema).to(
-        receive(:example).
-        with(root_context).
-        and_return(people)
-      )
-      expect(collection_view).to receive(:dump).and_call_original
+      # because we set the context throughout, we know +people+ will
+      # will generate with identical contents across all runs.
+      expected = people.collect do |person|
+        { name: person.name, address: person.address.render(view: :state) }
+      end
 
-      collection_view.example(root_context)
+      collection_view.example(root_context).should eq expected
     end
   end
 
