@@ -281,7 +281,7 @@ module Praxis
         attributes.each do | name, attr |
           # Note: we can freely pass master view for attributes that aren't blueprint/containers because
           # their dump methods will ignore it (they always dump everything regardless)
-          attribute name, view: :master
+          attribute name, view: :default
         end
       end
     end
