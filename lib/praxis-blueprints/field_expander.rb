@@ -88,6 +88,11 @@ module Praxis
         end
       end
 
+      # hack for Attributor::Hash to prevent trying to expand its keys
+      if object == Attributor::Hash || (object < Attributor::Hash && !(object < Attributor::Model))
+        return true
+      end
+
       if history[object].include? fields
         return history[object][fields]
       end

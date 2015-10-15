@@ -133,4 +133,35 @@ describe Praxis::FieldExpander do
   it 'optimizes duplicate field expansions' do
     expect(field_expander.expand(FullName,true)).to be(field_expander.expand(FullName,true))
   end
+
+  context 'expanding hash attributes' do
+    let(:type) do
+      Class.new(Attributor::Model) do
+        attributes do
+          attribute :name, String
+          attribute :simple_hash, Hash
+          attribute :keyed_hash, Hash do
+            key :foo, String
+            key :bar, String
+          end
+          attribute :some_struct do
+            attribute :something, String
+          end
+        end
+      end
+    end
+
+    it 'expands' do
+      expected = {
+        name: true,
+        simple_hash: true,
+        keyed_hash: true,
+        some_struct: {something: true}
+      }
+      field_expander.expand(type, true).should eq(expected)
+    end
+
+  end
+
+
 end
