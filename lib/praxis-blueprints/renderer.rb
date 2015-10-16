@@ -45,11 +45,11 @@ module Praxis
         fields: fields,
         view: view
       }
-      
+
       ActiveSupport::Notifications.instrument 'praxis.blueprint.render'.freeze,  notification_payload do
         fields.each_with_object(Hash.new) do |(key, subfields), hash|
           begin
-            value = object.send(key)
+            value = object._get_attr(key)
           rescue => e
             raise Attributor::DumpError, context: context, name: key, type: object.class, original_exception: e
           end

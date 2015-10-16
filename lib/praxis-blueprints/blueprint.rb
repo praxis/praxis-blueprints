@@ -275,6 +275,7 @@ module Praxis
     end
 
 
+
     def self.generate_master_view!
       attributes = self.attributes
       view :master do
@@ -353,6 +354,11 @@ module Praxis
       end
     ensure
       @validating = false
+    end
+
+    # generic semi-private getter used by Renderer
+    def _get_attr(name)
+      self.send(name)
     end
 
   end

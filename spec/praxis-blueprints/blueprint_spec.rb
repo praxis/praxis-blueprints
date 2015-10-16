@@ -26,7 +26,7 @@ describe Praxis::Blueprint do
 
     it 'uses :master view for rendering blueprint sub-attributes' do
       subview = master_view.contents[:address]
-      subview.should be Address.views[:master]
+      subview.should be Address.views[:default]
     end
   end
 
@@ -346,8 +346,10 @@ describe Praxis::Blueprint do
   end
 
   context '.render' do
-    let(:person) { Person.example }
+    let(:person) { Person.example('1') }
     it 'is an alias to dump' do
+
+      person.object.contents
       rendered = Person.render(person, view: :default)
       dumped = Person.dump(person, view: :default)
       expect(rendered).to eq(dumped)

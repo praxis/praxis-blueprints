@@ -88,6 +88,11 @@ module Praxis
         end
       end
 
+      # just include the full thing if it has no attributes
+      if object.attributes.empty?
+        return true
+      end
+
       if history[object].include? fields
         return history[object][fields]
       end
