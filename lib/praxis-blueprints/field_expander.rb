@@ -8,8 +8,6 @@ module Praxis
       end
     end
 
-    # FIXME: detect circular dependencies
-    # OPTIMIZE: handle duplicate fields to improve caching object identity
     def self.expand(object, fields=true)
       self.new.expand(object,fields)
     end

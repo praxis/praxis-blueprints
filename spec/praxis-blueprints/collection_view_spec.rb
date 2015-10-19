@@ -19,8 +19,6 @@ describe Praxis::CollectionView do
     end
   end
 
-
-
   let(:member_view) do
     Praxis::View.new(:tiny, Person, &contents_definition)
   end
@@ -28,8 +26,6 @@ describe Praxis::CollectionView do
   let(:collection_view) do
     Praxis::CollectionView.new(:collection_view, Person, member_view)
   end
-
-
 
   context 'creating from a member view' do
 
@@ -51,16 +47,6 @@ describe Praxis::CollectionView do
   context '#render' do
     subject(:output) { collection_view.render(people, context: root_context) }
 
-    it do
-      #people
-      #root_context
-      #collection_view
-      #binding.pry
-      #output = collection_view.render(people, context: root_context)
-
-
-
-    end
     it { should be_kind_of(Array) }
     it { should eq people.collect {|person| member_view.render(person)} }
   end

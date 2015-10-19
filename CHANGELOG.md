@@ -4,7 +4,7 @@
 
 
 * Added `FieldExpander`, a new class that recursively expands a tree of
-  of attributes into their lowest-level values.
+  of attributes for Blueprint types as well as view objects into their lowest-level values.
     * For example, for the `Person` and `Address` blueprints defined in
     [spec_blueprints.rb](sped/support/spec_blueprints.rb):
       * `FieldExpander.expand(Person, {name: true, full_name: true})` would return
