@@ -281,9 +281,7 @@ describe Praxis::Blueprint do
     context 'as a hash' do
       let(:decorators) { {name: name} }
       it do
-        pers = person
-        # binding.pry
-        pers.name.should eq('Soren II')
+        person.name.should eq('Soren II')
       end
 
       its(:name) { should be(name) }

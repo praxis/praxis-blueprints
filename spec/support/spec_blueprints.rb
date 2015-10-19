@@ -65,11 +65,6 @@ class Address  < Praxis::Blueprint
     attribute :state
   end
 
-  view :with_nil, include_nil: true do
-    attribute :name
-    attribute :street
-  end
-
   view :state do
     attribute :state
   end

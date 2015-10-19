@@ -2,7 +2,6 @@
 
 ## next
 
-
 * Added `FieldExpander`, a new class that recursively expands a tree of
   of attributes for Blueprint types as well as view objects into their lowest-level values.
     * For example, for the `Person` and `Address` blueprints defined in
@@ -21,11 +20,24 @@
         produce `{name: person.name, address: {state: person.address.state}}`
     * Accepts an `include_nil:` option when initialized, that if true will
       cause the renderer to output values that are nil, rather than omit them.
+      Note: this will apply to the entire rendering, there is no way to set it
+      for only a portion of the rendering, or on a per-View basis.
 * Added `Blueprint.domain_model` to specify the underlying domain model, e.g.
   a `Praxis::Mapper::Resource`. Accepts a string value that is resolved when
-  `Blueprint.finalize!` is called.
+  `Blueprint.finalize!` is called. Defaults to `Object`.
+* `Blueprint.load` will use the `domain_model` to wrap the incoming object
+  if it is not an instance of that class. Note: this does not change existing
+  default if `domain_model` is not set.
 * Refactored `View` and `CollectionView` rendering to use a `Renderer` with
   a set of expanded fields.
+* The automatically generated `:master` view will now render sub-attributes
+  using their `:default` view, rather than `:master`.
+* `Blueprint#render` now uses `Renderer` and `FieldExpander` internally. In most
+  cases this will continue to function identically to the old behavior, but
+* Views defined with `Blueprint.view`, including subviews defined inside,
+  no longer accept the `:include_nil` option. This can be set using the same
+  option on `Renderer` described above.
+  
 
 ## 2.2
 
