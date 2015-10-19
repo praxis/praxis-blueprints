@@ -1,7 +1,11 @@
-# Praxis Blueprints [![TravisCI][travis-img-url]][travis-ci-url] 
+# Praxis Blueprints [![TravisCI][travis-img-url]][travis-ci-url] [![Coverage Status][coveralls-img-url]][coveralls-url] [![Dependency Status][gemnasium-img-url]][gemnasium-url]
 
 [travis-img-url]:https://travis-ci.org/rightscale/praxis-blueprints.svg?branch=master
 [travis-ci-url]:https://travis-ci.org/rightscale/praxis-blueprints
+[coveralls-img-url]:https://coveralls.io/repos/rightscale/praxis-blueprints/badge.svg?branch=master&service=github
+[coveralls-url]:https://coveralls.io/github/rightscale/praxis-blueprints?branch=master
+[gemnasium-img-url]:https://gemnasium.com/rightscale/praxis-blueprints.svg
+[gemnasium-url]:https://gemnasium.com/rightscale/praxis-blueprints
 
 
 Praxis Blueprints is a library that allows for defining a reusable class structures that has a set of typed attributes and a set of views with which to render them. Instantiations of Blueprints resemble ruby Structs which respond to methods of the attribute names. Rendering is format-agnostic in that
