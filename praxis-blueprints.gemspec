@@ -10,7 +10,7 @@ Gem::Specification.new do |spec|
   spec.description = "Praxis Blueprints is a library that allows for defining a reusable class structures that has a set of typed attributes and a set of views with which to render them. Instantiations of Blueprints resemble ruby Structs which respond to methods of the attribute names. Rendering is format-agnostic in that
 it results in a structured hash instead of an encoded string. Blueprints can automatically generate object structures that follow the attribute definitions."
   spec.email = ["blanquer@gmail.com","dane.jensen@gmail.com"]
-  
+
   spec.homepage = "https://github.com/rightscale/praxis-blueprints"
   spec.license = "MIT"
   spec.required_ruby_version = ">=2.1"
@@ -20,7 +20,7 @@ it results in a structured hash instead of an encoded string. Blueprints can aut
   spec.require_paths = ["lib"]
 
   spec.add_runtime_dependency(%q<randexp>, ["~> 0"])
-  spec.add_runtime_dependency(%q<attributor>, [">= 4.0.1"])
+  spec.add_runtime_dependency(%q<attributor>, [">= 4.1"])
   spec.add_runtime_dependency(%q<activesupport>, [">= 3"])
 
   spec.add_development_dependency "bundler", "~> 1.6"

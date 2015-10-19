@@ -1,4 +1,3 @@
-
 class Person < Praxis::Blueprint
   attributes do
     attribute :name, String, example: /[:first_name:]/
@@ -10,14 +9,15 @@ class Person < Praxis::Blueprint
     attribute :aliases, Attributor::Collection.of(FullName)
 
     attribute :address, Address, example: proc { |person, context| Address.example(context, resident: person) }
+    attribute :work_address, Address
 
     attribute :prior_addresses, Attributor::Collection.of(Address)
-
     attribute :parents do
       attribute :father, String
       attribute :mother, String
     end
 
+    attribute :tags, Attributor::Collection.of(String)
     attribute :href, String
     attribute :alive, Attributor::Boolean, default: true
   end
@@ -26,6 +26,7 @@ class Person < Praxis::Blueprint
     attribute :name
     attribute :full_name
     attribute :address
+    attribute :prior_addresses
   end
 
   view :current do
@@ -44,12 +45,6 @@ class Person < Praxis::Blueprint
     attribute :age
     attribute :address
     attribute :alive
-  end
-
-  view :with_unset, include_unset: true  do
-    attribute :name
-    attribute :email
-    attribute :age
   end
 
 end
@@ -74,6 +69,11 @@ class Address  < Praxis::Blueprint
     attribute :state
   end
 
+  view :extended do
+    attribute :state
+    attribute :street
+    attribute :resident
+  end
 
 end
 

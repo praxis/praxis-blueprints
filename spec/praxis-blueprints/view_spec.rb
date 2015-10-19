@@ -6,346 +6,75 @@ describe Praxis::View do
   let(:address) { person.address }
 
   let(:view) do
-    Praxis::View.new(:tiny, Person) do
+    Praxis::View.new(:testing, Person) do
       attribute :name
-      attribute :alive
-      attribute :address, view: :state
+      attribute :email
+      attribute :full_name
+      attribute :parents do
+        attribute :father
+        attribute :mother
+      end
+      attribute :address, view: :extended
+      attribute :prior_addresses, view: :state
+      attribute :work_address
     end
   end
-  let(:dumping_options){ {} }
-  subject(:output) { view.to_hash(person, dumping_options ) }
-
 
   it 'can generate examples' do
     view.example.should have_key(:name)
   end
 
-  context 'swanky rendering options' do
-    let(:view) do
-      Praxis::View.new(:info, Person) do
-        attribute :name
-        attribute :email
-        attribute :age
-        attribute :address
-      end
-    end
-
-    let(:data) { {name: 'Bob', email: nil, address: nil } }
-
-    let(:person) { Person.load(data) }
-
-    context 'with default rendering options' do
-      it 'attributor works right' do
-        person.object.key?(:name).should be(true)
-        person.object.key?(:email).should be(true)
-        person.object.key?(:age).should be(false)
-        person.object.key?(:address).should be(true)
-
-        person.name.should eq('Bob')
-        person.email.should eq(nil)
-        person.age.should eq(nil)
-        person.address.should eq(nil)
-      end
-
-      it 'renders existing, non-nil, attributes' do
-        output.key?(:name).should be(true)
-        output.key?(:email).should_not be(true)
-        output.key?(:age).should_not be(true)
-        output.key?(:address).should_not be(true)
-      end
-
-      context 'and custom field rendering' do
-        let(:data) { {name: 'Bob', email: 'bob@acme.org', age: 50 } }
-
-        context 'renders only the specified fields that have values' do
-          let(:dumping_options){ { fields: {name: nil, email: nil} } }
-          its(:keys){ should == [:name, :email] }
-        end
-
-        context 'renders only the specified fields excluding nil valued ones' do
-          let(:dumping_options){ { fields: {name: nil, address: nil} } }
-          its(:keys){ should == [:name] }
-        end
-      end
-    end
-
-
-    context 'with include_nil: true' do
-      let(:view) do
-        Praxis::View.new(:info, Person, include_nil: true) do
-          attribute :name
-          attribute :email
-          attribute :age
-          attribute :address
-        end
-      end
-
-      it 'includes attributes with nil values' do
-        output.key?(:email).should be(true)
-        output[:email].should be(nil)
-
-        output.key?(:address).should be(true)
-        output[:address].should be(nil)
-
-        output.key?(:age).should be(true)
-        output[:age].should be(nil)
-      end
-
-      context 'and custom field rendering' do
-        let(:data) { {name: 'Bob', email: 'bob@acme.org', age: 50 } }
-
-        context 'renders only the specified fields including nil valued' do
-          let(:dumping_options){ { fields: {name: nil, address: nil}} }
-          its(:keys){ should == [:name,:address] }
-        end
-      end
-    end
-
+  it 'delegates to Renderer with its expanded_fields' do
+    renderer = Praxis::Renderer.new
+    renderer.should_receive(:render).with(person, view.expanded_fields, context: 'foo')
+    view.render(person, context: 'foo', renderer: renderer)
   end
 
-
-
-  context 'direct attributes' do
-
-    let(:person) { Person.load(person_data) }
-    context 'with undisputably existing values' do
-
-      let(:person_data) { {name:'somename', alive:true} }
-
-      let(:expected_output) do
-        {
-          :name => 'somename',
-          :alive => true
-        }
-      end
-      it 'should show up' do
-        subject.should == expected_output
-      end
-    end
-    context 'with nil values' do
-      let(:person_data) { {name:'alive_is_nil', alive: nil} }
-      let(:expected_output) do
-        {
-          name: 'alive_is_nil',
-          alive: true
-        }
-      end
-      it 'are skipped completely' do
-        subject.should == expected_output
+  context 'defining views' do
+    subject(:contents) { view.contents }
+    its(:keys) { should match_array([:name, :email, :full_name, :parents, :address, :prior_addresses, :work_address]) }
+    it 'saves attributes defined on the Blueprint' do
+      [:name, :email, :full_name ].each do |attr|
+        contents[attr].should be Person.attributes[attr]
       end
     end
 
-    context 'with false values' do
-      let(:person_data) { {name:'alive_is_false', alive:false} }
-      let(:expected_output) do
-        {
-          :name => 'alive_is_false',
-          :alive => false
-        }
-      end
-      it 'should still show up, since "false" is really a valid value' do
-        subject.should == expected_output
-      end
+    it 'saves views for attributes for Blueprints' do
+      contents[:address].should be Address.views[:extended]
+      contents[:work_address].should be Address.views[:default]
     end
 
-  end
-
-  context 'nested attributes' do
-
-    context 'without block' do
-      let(:view) do
-        Praxis::View.new(:parents, Person) do
-          attribute :name
-          attribute :parents
-        end
-      end
-
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :parents => {
-            :father => person.parents.father,
-            :mother => person.parents.mother
-          }
-        }
-      end
-
-      it { should eq expected_output }
-
+    it 'does something with collections of Blueprints' do
+      contents[:prior_addresses].should be_kind_of(Praxis::CollectionView)
+      contents[:prior_addresses].contents.should eq Address.views[:state].contents
     end
 
-    context 'with block' do
-      let(:view) do
-        Praxis::View.new(:paternal, Person) do
-          attribute :name
-          attribute :parents do
-            attribute :father
+
+    context 'creating subviews' do
+      it 'creates subviews when a block is used' do
+        contents[:parents].should be_kind_of(Praxis::View)
+      end
+
+      context 'for collections' do
+        let(:view) do
+          Praxis::View.new(:testing, Person) do
+            attribute :name
+            attribute :prior_addresses do
+              attribute :name
+              attribute :street
+            end
           end
         end
-      end
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :parents => {
-            :father => person.parents.father
-          }
-        }
-      end
 
-      it { should eq expected_output }
-    end
-
-  end
-
-
-  context 'using a related object as an attribute' do
-
-    context 'using default view' do
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :address
-        end
-      end
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :address => {
-            :street => address.street,
-            :state => address.state
-          }
-        }
-      end
-
-
-      it { should eq expected_output }
-
-      context 'using the fields option' do
-        let(:dumping_options){ { fields: {name: nil, address: {state: nil} } } }
-
-        let(:expected_output) do
-          {
-            :name => person.name,
-            :address => {
-              :state => address.state
-            }
-          }
-        end
-
-        it { should eq expected_output }
-      end
-
-    end
-
-
-    context 'specifying a view' do
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :address, :view => :state
+        it 'creates sub-CollectionViews from a block' do
+          contents[:prior_addresses].should be_kind_of(Praxis::CollectionView)
+          contents[:prior_addresses].contents.keys.should match_array([:name, :street])
         end
       end
 
-
-
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :address => {
-            :state => address.state
-          }
-        }
-      end
-
-      it { should eq expected_output }
-    end
-
-
-    context 'with some sort of "in-lined" view' do
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :address do
-            attribute :state
-          end
-        end
-      end
-
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :address => {
-            :state => address.state
-          }
-        }
-      end
-
-
-
-      it { should eq expected_output }
-    end
-
-    context 'when the related object is nil (does not respond to the related method)' do
-      let(:person) { Person.load(name: 'Bob') }
-
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :address
-        end
-      end
-      let(:expected_output) do
-        {
-          :name => person.name
-        }
-      end
-
-      it { should eq expected_output }
     end
 
   end
-
-
-  context 'using a related collection as an attribute' do
-    context 'with the default view' do
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :prior_addresses
-        end
-      end
-
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(view: :default)}
-        }
-      end
-
-      it { should eq expected_output }
-    end
-
-
-    context 'with a specified view' do
-      let(:view) do
-        Praxis::View.new(:default, Person) do
-          attribute :name
-          attribute :prior_addresses, :view => :state
-        end
-      end
-
-      let(:expected_output) do
-        {
-          :name => person.name,
-          :prior_addresses => person.prior_addresses.collect { |a| a.to_hash(view: :state)}
-        }
-      end
-
-      it { should eq expected_output }
-    end
-
-  end
-
 
   context '#describe' do
     subject(:description) { view.describe}
@@ -354,14 +83,15 @@ describe Praxis::View do
     context 'returns attributes' do
       subject { description[:attributes] }
 
-      its(:keys){ should == [:name,:alive,:address]  }
+      its(:keys){ should match_array view.contents.keys }
 
       it 'should return empty hashes for attributes with no specially defined view' do
-        subject[:name].should == {}
-        subject[:alive].should == {}
+        subject[:name].should eq({})
+        subject[:email].should eq({})
       end
       it 'should return the view name if specified' do
-        subject[:address].should == {view: :state}
+        subject[:address].should eq({view: :extended})
+        subject[:prior_addresses].should eq({view: :state})
       end
     end
   end
