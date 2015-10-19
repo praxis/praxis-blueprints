@@ -2,6 +2,8 @@
 
 ## next
 
+## 3.0
+
 * Added `FieldExpander`, a new class that recursively expands a tree of
   of attributes for Blueprint types as well as view objects into their lowest-level values.
     * For example, for the `Person` and `Address` blueprints defined in
@@ -37,7 +39,7 @@
 * Views defined with `Blueprint.view`, including subviews defined inside,
   no longer accept the `:include_nil` option. This can be set using the same
   option on `Renderer` described above.
-  
+
 
 ## 2.2
 
