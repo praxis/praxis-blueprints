@@ -315,7 +315,6 @@ module Praxis
         view_name = :default
       end
 
-
       if view_name
         unless (view = self.class.views[view_name])
           raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"

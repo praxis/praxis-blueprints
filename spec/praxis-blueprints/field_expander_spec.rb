@@ -125,8 +125,9 @@ describe Praxis::FieldExpander do
   end
 
   context 'circular expansions' do
-    it 'throws a CircularExpansionError' do
-      expect { field_expander.expand(Address,true) }.to raise_error(Praxis::FieldExpander::CircularExpansionError)
+    it 'preserve field object identity for circular references' do
+      result = field_expander.expand(Address,true)
+      result.should be result[:resident][:address]
     end
   end
 

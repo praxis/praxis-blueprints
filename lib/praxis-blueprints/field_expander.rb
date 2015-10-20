@@ -1,13 +1,5 @@
 module Praxis
   class FieldExpander
-    class CircularExpansionError < StandardError
-      attr_reader :stack
-      def initialize(message, stack=[])
-        super(message)
-        @stack = stack
-      end
-    end
-
     def self.expand(object, fields=true)
       self.new.expand(object,fields)
     end
@@ -26,7 +18,10 @@ module Praxis
 
     def expand(object, fields=true)
       if stack[object].include? fields
-        raise CircularExpansionError, "Circular expansion detected for object #{object.inspect} with fields #{fields.inspect}"
+        if history[object].include? fields
+          return history[object][fields]
+        end
+        raise "Circular expansion detected for object #{object.inspect} with fields #{fields.inspect}"
       else
         stack[object] << fields
       end
@@ -95,9 +90,11 @@ module Praxis
         return history[object][fields]
       end
 
-      history[object][fields] = expand_fields(object.attributes, fields) do |dumpable, sub_fields|
+      history[object][fields] = {}
+      result = expand_fields(object.attributes, fields) do |dumpable, sub_fields|
         self.expand(dumpable.type, sub_fields)
       end
+      history[object][fields].merge!(result)
     end
 
   end

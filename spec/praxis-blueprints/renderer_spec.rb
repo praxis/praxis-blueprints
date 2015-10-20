@@ -139,4 +139,15 @@ describe Praxis::Renderer do
     end
 
   end
+
+  context 'circular rendering' do
+    it do
+      field_expander = Praxis::FieldExpander.new
+      fields = field_expander.expand(Person,true)
+
+      person.object.address.object.resident = person
+      expect { renderer.render(person, fields) }.to raise_error(Praxis::Renderer::CircularRenderingError)
+    end
+
+  end
 end
