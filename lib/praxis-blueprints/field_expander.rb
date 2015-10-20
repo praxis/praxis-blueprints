@@ -21,6 +21,9 @@ module Praxis
         if history[object].include? fields
           return history[object][fields]
         end
+        # We should probably never get here, since we should have a record
+        # of the history of an expansion if we're trying to redo it,
+        # but we should also be conservative and raise here just in case.
         raise "Circular expansion detected for object #{object.inspect} with fields #{fields.inspect}"
       else
         stack[object] << fields
