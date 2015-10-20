@@ -2,6 +2,14 @@
 
 ## next
 
+* Reworked FieldExpander's behavior with circular references.
+  * Removed `Praxis::FieldExpander::CircularExpansionError`
+  * `FieldExpander#expand` now returns self-referential hashes for circular
+    expansions
+* `Renderer#render` catches stack overflows and returns a
+  `Praxis::Rendering::CircularRenderingError`, which includes a portions
+  from the start and end of the context at the time of the exception.
+
 ## 3.0
 
 * Added `FieldExpander`, a new class that recursively expands a tree of
