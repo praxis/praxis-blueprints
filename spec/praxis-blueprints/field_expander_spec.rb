@@ -129,6 +129,21 @@ describe Praxis::FieldExpander do
       result = field_expander.expand(Address,true)
       result.should be result[:resident][:address]
     end
+
+    context 'with collections of Blueprints' do
+      it 'still preserves object identity' do
+        result = field_expander.expand(Person, prior_addresses: true)[:prior_addresses][0]
+        result.should be result[:resident][:prior_addresses][0]
+      end
+    end
+
+    context 'for views' do
+      it 'still preserves object identity' do
+        result = field_expander.expand(Person.views[:circular], true)
+        result[:address][:resident].should be result
+      end
+    end
+
   end
 
   it 'optimizes duplicate field expansions' do
