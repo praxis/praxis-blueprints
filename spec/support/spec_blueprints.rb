@@ -29,6 +29,10 @@ class Person < Praxis::Blueprint
     attribute :prior_addresses
   end
 
+  view :circular do
+    attribute :address, view: :circular
+  end
+
   view :current do
     attribute :name
     attribute :full_name
@@ -63,8 +67,12 @@ class Address  < Praxis::Blueprint
   view :default do
     attribute :street
     attribute :state
+
   end
 
+  view :circular do
+    attribute :resident, view: :circular
+  end
   view :state do
     attribute :state
   end

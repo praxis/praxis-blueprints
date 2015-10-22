@@ -29,16 +29,15 @@ module Praxis
         stack[object] << fields
       end
 
-      if object.kind_of?(Praxis::View)
+      result = if object.kind_of?(Praxis::View)
         self.expand_view(object, fields)
       elsif object.kind_of? Attributor::Attribute
         self.expand_type(object.type, fields)
       else
         self.expand_type(object,fields)
       end
-    rescue CircularExpansionError => e
-      e.stack.unshift [object,fields]
-      raise
+
+      result
     ensure
       stack[object].delete fields
     end
@@ -65,20 +64,39 @@ module Praxis
 
 
     def expand_view(object,fields=true)
+      history[object][fields] = if object.kind_of?(Praxis::CollectionView)
+        []
+      else
+        {}
+      end
+
       result = expand_fields(object.contents, fields) do |dumpable, sub_fields|
         self.expand(dumpable, sub_fields)
       end
 
-      return [result] if object.kind_of?(Praxis::CollectionView)
-      result
+      if object.kind_of?(Praxis::CollectionView)
+        history[object][fields] << result
+      else
+        history[object][fields].merge!(result)
+      end
+      history[object][fields]
     end
 
 
     def expand_type(object,fields=true)
       unless object.respond_to?(:attributes)
         if object.respond_to?(:member_attribute)
-          fields = fields[0] if fields.kind_of? Array
-          return [self.expand(object.member_attribute.type, fields)]
+          if history[object].include? fields
+            return history[object][fields]
+          end
+          history[object][fields] = []
+
+          new_fields = fields.kind_of?(Array) ? fields[0] : fields
+
+          result = [self.expand(object.member_attribute.type, new_fields)]
+          history[object][fields].push(*result)
+
+          return result
         else
           return true
         end
