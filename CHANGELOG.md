@@ -2,6 +2,8 @@
 
 ## next
 
+## 3.1
+
 * Reworked FieldExpander's behavior with circular references.
   * Removed `Praxis::FieldExpander::CircularExpansionError`
   * `FieldExpander#expand` now returns self-referential hashes for circular
@@ -9,6 +11,7 @@
 * `Renderer#render` catches stack overflows and returns a
   `Praxis::Rendering::CircularRenderingError`, which includes a portions
   from the start and end of the context at the time of the exception.
+* Report `anonymous` in Blueprints following `Attributor` semantics.
 
 ## 3.0
 
