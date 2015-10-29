@@ -73,6 +73,8 @@ module Praxis
       end
 
       description = self.attribute.type.describe(shallow,example: example, **opts).merge!(id: self.id, name: type_name)
+      description.delete :anonymous # discard the Struct's view of anonymity, and use the Blueprint's one
+      description[:anonymous] = @_anonymous unless @_anonymous.nil?
 
       unless shallow
         description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|
@@ -242,6 +244,7 @@ module Praxis
     def self.define_attribute!
       @attribute = Attributor::Attribute.new(Attributor::Struct, @options, &@block)
       @block = nil
+      @attribute.type.anonymous_type true
       self.const_set(:Struct, @attribute.type)
     end
 
