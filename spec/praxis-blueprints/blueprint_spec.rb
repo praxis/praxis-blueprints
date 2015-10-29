@@ -186,16 +186,35 @@ describe Praxis::Blueprint do
       its([:name]){ should eq(blueprint_class.name)}
       its([:id]){ should eq(blueprint_class.id)}
       its([:views]){ should be_kind_of(Hash)}
+      its(:keys){ should_not include(:anonymous) }
       it 'should contain the an entry for each view' do
         subject[:views].keys.should include(:default, :current, :extended, :master)
       end
     end
+
 
     context 'for shallow descriptions' do
       let(:shallow) { true }
 
       it 'should not include views' do
         blueprint_class.describe(true).key?(:views).should be(false)
+      end
+      context 'for anonymous blueprints' do
+        let(:blueprint_class) do
+          klass = Class.new(Praxis::Blueprint) do
+            anonymous_type
+            attributes do
+              attribute :name, String
+            end
+          end
+          klass.finalize!
+          klass
+        end
+        it 'reports their anonymous-ness' do
+          description = blueprint_class.describe(true)
+          expect( description ).to have_key(:anonymous)
+          expect( description[:anonymous] ).to be(true)
+        end
       end
     end
 
