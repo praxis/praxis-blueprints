@@ -74,7 +74,12 @@ module Praxis
           next if value.nil? && !self.include_nil
 
           if subfields == true
-            hash[key] = value
+            hash[key] = case value
+            when Attributor::Hash
+              value.dump
+            else
+              value
+            end
           else
             new_context = context + [key]
             hash[key] = self.render(value, subfields, context: new_context)

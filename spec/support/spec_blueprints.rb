@@ -94,3 +94,11 @@ class FullName < Attributor::Model
   end
 
 end
+
+
+class SimpleHash  < Attributor::Model
+  attributes do
+    attribute :id, Integer
+    attribute :hash,  Hash
+  end
+end

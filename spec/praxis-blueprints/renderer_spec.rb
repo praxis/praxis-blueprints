@@ -150,4 +150,24 @@ describe Praxis::Renderer do
     end
 
   end
+
+  context 'rendering collections of hashes' do
+    let(:fields) do
+      {
+        id: true,
+        hash: true
+      }
+    end
+
+    let(:data) { {id: 10, hash: {foo: 'bar'}} }
+    let(:object) { SimpleHash.load(data)}
+    let(:renderer) { Praxis::Renderer.new }
+
+    subject(:output) { renderer.render(object, fields) }
+
+    its([:id]) { should eq data[:id] }
+    its([:hash]) { should eq data[:hash] }
+    its([:hash]) { should be_kind_of(Hash) }
+  end
+
 end
