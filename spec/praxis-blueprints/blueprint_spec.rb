@@ -177,10 +177,16 @@ describe Praxis::Blueprint do
     let(:example_object) { nil }
 
     before do
-      expect(blueprint_class.attribute.type).to receive(:describe).with(shallow, example: example_object).and_call_original #.and_return(type_describe)
+      expect(blueprint_class.attribute.type).to receive(:describe).with(shallow, example: example_object).ordered.and_call_original
     end
 
     context 'for non-shallow descriptions' do
+      before do
+        # Describing a Person also describes the :myself and :friends attributes. They are both a Person and a Coll of Person.
+        # This means that Person type `describe` is called two more times, thes times with shallow=true
+        expect(blueprint_class.attribute.type).to receive(:describe).with(true, example: example_object).twice.and_call_original
+      end
+
       subject(:output){ blueprint_class.describe }
 
       its([:name]){ should eq(blueprint_class.name)}
@@ -224,6 +230,12 @@ describe Praxis::Blueprint do
       let(:shallow) { false }
 
       subject(:output) { blueprint_class.describe(false, example: example) }
+      before do
+        # Describing a Person also describes the :myself and :friends attributes. They are both a Person and a Coll of Person.
+        # This means that Person type `describe` is called two more times, thes times with shallow=true
+        expect(blueprint_class.attribute.type).to receive(:describe)
+          .with(true, example: an_instance_of(blueprint_class.attribute.type)).twice.and_call_original
+      end
 
       it 'outputs examples for leaf values using the provided example' do
         output[:attributes][:name][:example].should eq example.name
