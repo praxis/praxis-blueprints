@@ -5,8 +5,16 @@ module Praxis
       super(name,schema)
 
       if member_view
-        @contents = member_view.contents.clone
+        @_lazy_view = member_view
       end
+    end
+
+    def contents
+      if @_lazy_view
+        @contents = @_lazy_view.contents.clone
+        @_lazy_view = nil
+      end
+      super
     end
 
     def example(context=Attributor::DEFAULT_ROOT_CONTEXT)

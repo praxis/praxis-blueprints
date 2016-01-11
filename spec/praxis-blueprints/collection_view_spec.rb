@@ -32,6 +32,19 @@ describe Praxis::CollectionView do
     it 'gets the proper contents' do
       collection_view.contents.should eq member_view.contents
     end
+
+    context 'lazy initializes its contents' do
+
+      it 'so it will not call contents until it is first needed' do
+        member_view.stub(:contents){ raise 'No!' }
+        expect{ collection_view.name }.to_not raise_error
+      end
+      it 'when contents is needed, it will clone it from the member_view' do
+        # Twice is because we're callong member_view.contents for the right side of the equality
+        expect(member_view).to receive(:contents).twice.and_call_original
+        collection_view.contents.should eq member_view.contents
+      end
+    end
   end
 
   context 'creating with a set of attributes defined in a block' do

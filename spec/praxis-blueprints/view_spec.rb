@@ -72,6 +72,24 @@ describe Praxis::View do
         end
       end
 
+      context 'that reference the enclosing view' do
+        let(:view) { Person.views.fetch(:self_referencing) }
+        context 'for non-collection attributes' do
+          it 'the view points exactly to parent view' do
+            contents[:myself].should be_kind_of(Praxis::View)
+            contents[:myself].should be(view)
+            contents[:myself].contents.should eq(view.contents)
+          end
+        end
+        context 'for collection attributes' do
+          it 'creates the sub-CollectionViews with a member view with the same contents of the parent' do
+            contents[:friends].should be_kind_of(Praxis::CollectionView)
+            contents[:friends].contents.should eq(view.contents)
+            contents[:friends].contents.keys.should match_array([:myself,:friends])
+          end
+        end
+
+      end
     end
 
   end

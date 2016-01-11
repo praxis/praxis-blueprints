@@ -20,6 +20,8 @@ class Person < Praxis::Blueprint
     attribute :tags, Attributor::Collection.of(String)
     attribute :href, String
     attribute :alive, Attributor::Boolean, default: true
+    attribute :myself, Person
+    attribute :friends, Attributor::Collection.of(Person)
   end
 
   view :default do
@@ -31,6 +33,11 @@ class Person < Praxis::Blueprint
 
   view :circular do
     attribute :address, view: :circular
+  end
+
+  view :self_referencing do
+    attribute :myself, view: :self_referencing
+    attribute :friends, view: :self_referencing
   end
 
   view :current do
