@@ -55,7 +55,14 @@ module Praxis
     end
 
     def _render(object, fields, view=nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
-      return object if fields == true
+      if fields == true
+        return case object
+        when Attributor::Hash
+          object.dump
+        else
+          object
+        end
+      end
 
       notification_payload = {
         blueprint: object,

@@ -151,7 +151,7 @@ describe Praxis::Renderer do
 
   end
 
-  context 'rendering collections of hashes' do
+  context 'rendering hashes' do
     let(:fields) do
       {
         id: true,
@@ -168,6 +168,29 @@ describe Praxis::Renderer do
     its([:id]) { should eq data[:id] }
     its([:hash]) { should eq data[:hash] }
     its([:hash]) { should be_kind_of(Hash) }
+  end
+
+  context 'rendering collections of hashes' do
+    let(:fields) do
+      {
+        id: true,
+        hash_collection: [true]
+      }
+    end
+
+    let(:data) { {id: 10, hash_collection: [{foo: 'bar'}]} }
+    let(:object) { SimpleHashCollection.load(data)}
+    let(:renderer) { Praxis::Renderer.new }
+
+    subject(:output) { renderer.render(object, fields) }
+
+    its([:id]) { should eq data[:id] }
+    its([:hash_collection]) { should eq data[:hash_collection] }
+    its([:hash_collection]) { should be_kind_of(Array) }
+
+    it 'renders the hashes' do
+      expect(output[:hash_collection].first).to be_kind_of(Hash)
+    end
   end
 
 end

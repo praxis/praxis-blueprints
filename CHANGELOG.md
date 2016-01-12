@@ -2,7 +2,7 @@
 
 ## next
 
-* Ensure we call `object.dump` in Renderer when dumping a Attributor::Hash if no subfields were selected.
+* Ensure we call `object.dump` in Renderer when dumping a Attributor::Hash or collection of Attributor::Hash if no subfields were selected.
 
 ## 3.1
 

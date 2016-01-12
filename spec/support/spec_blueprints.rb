@@ -109,3 +109,11 @@ class SimpleHash  < Attributor::Model
     attribute :hash,  Hash
   end
 end
+
+
+class SimpleHashCollection < Attributor::Model
+  attributes do
+    attribute :id, Integer
+    attribute :hash_collection, Attributor::Collection.of(Hash)
+  end
+end
