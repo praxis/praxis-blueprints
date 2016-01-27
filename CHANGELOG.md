@@ -2,7 +2,9 @@
 
 ## next
 
-* Ensure we call `object.dump` in Renderer when dumping a Attributor::Hash or collection of Attributor::Hash if no subfields were selected.
+* Ensure we call `object.dump` in Renderer when fully dumping an instance (or array of instances) that have the Attributor::Dumpable module (i.e., when no subfields were selected)
+  * In other words, attributor types (custom or not) will need to include the Attributor::Dumpable module and properly implement the dump instance method to produce the right output with native ruby objects.
+
 
 ## 3.1
 

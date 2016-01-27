@@ -57,7 +57,7 @@ module Praxis
     def _render(object, fields, view=nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
       if fields == true
         return case object
-        when Attributor::Hash
+        when Attributor::Dumpable
           object.dump
         else
           object
@@ -82,7 +82,7 @@ module Praxis
 
           if subfields == true
             hash[key] = case value
-            when Attributor::Hash
+            when Attributor::Dumpable
               value.dump
             else
               value

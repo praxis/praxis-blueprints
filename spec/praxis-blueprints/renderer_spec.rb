@@ -4,13 +4,21 @@ describe Praxis::Renderer do
 
   let(:address) { Address.example }
   let(:prior_addresses) { 2.times.collect { Address.example } }
+  let(:alias_one) { FullName.example }
+  let(:alias_two) { FullName.example }
+  let(:aliases) { [alias_one, alias_two] }
+  let(:metadata_hash) { { something: 'here' } }
+  let(:metadata) { Attributor::Hash.load( metadata_hash ) }
+
   let(:person) do
      Person.example(
       address: address,
       email: nil,
       prior_addresses: prior_addresses,
       alive: false,
-      work_address: nil
+      work_address: nil,
+      aliases: aliases,
+      metadata: metadata
     )
   end
 
@@ -27,7 +35,9 @@ describe Praxis::Renderer do
       },
       prior_addresses: [{name: true}],
       work_address: true,
-      alive: true
+      alive: true,
+      metadata: true,
+      aliases: [true]
     }
   end
 
@@ -36,7 +46,7 @@ describe Praxis::Renderer do
   subject(:output) { renderer.render(person, fields) }
 
   it 'renders existing attributes' do
-    output.keys.should match_array([:name, :full_name, :alive, :address, :prior_addresses])
+    output.keys.should match_array([:name, :full_name, :alive, :address, :prior_addresses, :metadata, :aliases])
 
     output[:name].should eq person.name
     output[:full_name].should eq({first: person.full_name.first, last: person.full_name.last})
@@ -50,6 +60,23 @@ describe Praxis::Renderer do
 
     expected_prior_addresses = prior_addresses.collect { |addr| {name: addr.name} }
     output[:prior_addresses].should match_array(expected_prior_addresses)
+
+    expected_aliases = aliases.collect { |the_alias| the_alias.dump }
+    output[:aliases].should match_array( expected_aliases )
+
+    output[:metadata].should eq( metadata.dump )
+  end
+
+  context 'calls dump for non-Blueprint, but still Dumpable instances' do
+    it 'when rendering them in full as array members' do
+      alias_one.should_receive(:dump).and_call_original
+      output[:aliases].first.should eq( first: alias_one.first, last: alias_one.last )
+    end
+    it 'when rendering them in full as leaf object' do
+      metadata.should_receive(:dump).and_call_original
+      output[:metadata].should eq( metadata_hash )
+    end
+
   end
 
   it 'does not render attributes with nil values' do
