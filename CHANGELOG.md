@@ -2,9 +2,11 @@
 
 ## next
 
+## 3.2
+
 * Ensure we call `object.dump` in Renderer when fully dumping an instance (or array of instances) that have the Attributor::Dumpable module (i.e., when no subfields were selected)
   * In other words, attributor types (custom or not) will need to include the Attributor::Dumpable module and properly implement the dump instance method to produce the right output with native ruby objects.
-
+* Ensure `Blueprint` validates advanced requirements.
 
 ## 3.1
 
