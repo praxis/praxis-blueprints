@@ -22,6 +22,7 @@ class Person < Praxis::Blueprint
     attribute :alive, Attributor::Boolean, default: true
     attribute :myself, Person
     attribute :friends, Attributor::Collection.of(Person)
+    attribute :metadata, Attributor::Hash
   end
 
   view :default do

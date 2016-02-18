@@ -193,7 +193,6 @@ module Praxis
 
 
     def self.validate(value, context=Attributor::DEFAULT_ROOT_CONTEXT, _attribute=nil)
-
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
       context = [context] if context.is_a? ::String
 
@@ -341,19 +340,29 @@ module Praxis
     def validate(context=Attributor::DEFAULT_ROOT_CONTEXT)
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
       context = [context] if context.is_a? ::String
+      keys_with_values = []
 
       raise "validation conflict" if @validating
       @validating = true
 
-      self.class.attributes.each_with_object(Array.new) do |(sub_attribute_name, sub_attribute), errors|
+      errors = []
+      self.class.attributes.each do |sub_attribute_name, sub_attribute|
         sub_context = self.class.generate_subcontext(context,sub_attribute_name)
         value = self.send(sub_attribute_name)
+        unless value.nil?
+          keys_with_values << sub_attribute_name
+        end
 
         if value.respond_to?(:validating) # really, it's a thing with sub-attributes
           next if value.validating
         end
         errors.push(*sub_attribute.validate(value, sub_context))
       end
+      self.class.attribute.type.requirements.each do |req|
+        validation_errors = req.validate(keys_with_values, context)
+        errors.push(*validation_errors) unless validation_errors.empty?
+      end
+      errors
     ensure
       @validating = false
     end
