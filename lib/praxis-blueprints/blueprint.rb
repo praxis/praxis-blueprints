@@ -8,6 +8,8 @@ require 'ostruct'
 module Praxis
   class Blueprint
     include Attributor::Type
+    include Attributor::Dumpable
+
     extend Finalizable
 
     if RUBY_ENGINE =~ /^jruby/

@@ -210,4 +210,15 @@ describe Praxis::Renderer do
       expect(output[:hash_collection].first).to be_kind_of(Hash)
     end
   end
+
+  context 'rendering a Blueprint with fields true' do
+    let(:fields) do
+      {
+        name: true,
+        address: true
+      }
+    end
+
+    its([:address]) { should eq person.address.dump }
+  end
 end
