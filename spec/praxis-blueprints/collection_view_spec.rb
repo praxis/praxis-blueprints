@@ -1,16 +1,15 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 
 describe Praxis::CollectionView do
-
   let(:root_context) { ['people'] }
 
   let(:people) do
-    3.times.collect do |i|
-      context = ["people", "at(#{i})"]
+    Array.new(3) do |i|
+      context = ['people', "at(#{i})"]
       Person.example(context)
     end
   end
-
 
   let(:contents_definition) do
     proc do
@@ -28,16 +27,14 @@ describe Praxis::CollectionView do
   end
 
   context 'creating from a member view' do
-
     it 'gets the proper contents' do
       collection_view.contents.should eq member_view.contents
     end
 
     context 'lazy initializes its contents' do
-
       it 'so it will not call contents until it is first needed' do
-        member_view.stub(:contents){ raise 'No!' }
-        expect{ collection_view.name }.to_not raise_error
+        member_view.stub(:contents) { raise 'No!' }
+        expect { collection_view.name }.to_not raise_error
       end
       it 'when contents is needed, it will clone it from the member_view' do
         # Twice is because we're callong member_view.contents for the right side of the equality
@@ -61,7 +58,7 @@ describe Praxis::CollectionView do
     subject(:output) { collection_view.render(people, context: root_context) }
 
     it { should be_kind_of(Array) }
-    it { should eq people.collect {|person| member_view.render(person)} }
+    it { should eq people.collect { |person| member_view.render(person) } }
   end
 
   context '#example' do
@@ -82,5 +79,4 @@ describe Praxis::CollectionView do
     its([:attributes]) { should eq(member_view.describe[:attributes]) }
     its([:type]) { should eq(:collection) }
   end
-
 end

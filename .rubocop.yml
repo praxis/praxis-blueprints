@@ -1,0 +1,35 @@
+AllCops:
+  TargetRubyVersion: 2.3
+Style/Documentation:
+  Enabled: false
+Metrics/MethodLength:
+  Enabled: false
+Metrics/ClassLength:
+  Enabled: false
+Metrics/LineLength:
+  Max: 200
+Style/RedundantSelf:
+  Enabled: false
+Style/ClassAndModuleChildren:
+  Enabled: false
+Lint/Debugger:
+  Enabled: false
+Metrics/AbcSize:
+  Enabled: false
+Style/CaseEquality:
+  Enabled: false
+Lint/UnusedMethodArgument:
+  AllowUnusedKeywordArguments: true
+Style/FileName:
+  Exclude:
+    - 'lib/praxis-blueprints.rb'
+Style/ClassVars:
+  Exclude:
+    - 'lib/praxis-blueprints/blueprint.rb'
+
+# Offense count: 5
+Metrics/CyclomaticComplexity:
+  Max: 8
+# Offense count: 5
+Metrics/PerceivedComplexity:
+  Max: 12

@@ -1,7 +1,8 @@
+# frozen_string_literal: true
 module Praxis
   class FieldExpander
-    def self.expand(object, fields=true)
-      self.new.expand(object,fields)
+    def self.expand(object, fields = true)
+      new.expand(object, fields)
     end
 
     attr_reader :stack
@@ -11,16 +12,14 @@ module Praxis
       @stack = Hash.new do |hash, key|
         hash[key] = Set.new
       end
-      @history = Hash.new do |hash,key|
-        hash[key] = Hash.new
+      @history = Hash.new do |hash, key|
+        hash[key] = {}
       end
     end
 
-    def expand(object, fields=true)
+    def expand(object, fields = true)
       if stack[object].include? fields
-        if history[object].include? fields
-          return history[object][fields]
-        end
+        return history[object][fields] if history[object].include? fields
         # We should probably never get here, since we should have a record
         # of the history of an expansion if we're trying to redo it,
         # but we should also be conservative and raise here just in case.
@@ -29,13 +28,13 @@ module Praxis
         stack[object] << fields
       end
 
-      result = if object.kind_of?(Praxis::View)
-        self.expand_view(object, fields)
-      elsif object.kind_of? Attributor::Attribute
-        self.expand_type(object.type, fields)
-      else
-        self.expand_type(object,fields)
-      end
+      result = if object.is_a?(Praxis::View)
+                 expand_view(object, fields)
+               elsif object.is_a? Attributor::Attribute
+                 expand_type(object.type, fields)
+               else
+                 expand_type(object, fields)
+               end
 
       result
     ensure
@@ -43,38 +42,37 @@ module Praxis
     end
 
     def expand_fields(attributes, fields)
-      raise ArgumentError, "expand_fields must be given a block" unless block_given?
+      raise ArgumentError, 'expand_fields must be given a block' unless block_given?
 
       unless fields == true
-        attributes = attributes.select do |k,v|
+        attributes = attributes.select do |k, _v|
           fields.key?(k)
         end
       end
 
       attributes.each_with_object({}) do |(name, dumpable), hash|
         sub_fields = case fields
-          when true
-            true
-          when Hash
-            fields[name] || true
-          end
-        hash[name] = yield(dumpable,sub_fields)
+                     when true
+                       true
+                     when Hash
+                       fields[name] || true
+                     end
+        hash[name] = yield(dumpable, sub_fields)
       end
     end
 
-
-    def expand_view(object,fields=true)
-      history[object][fields] = if object.kind_of?(Praxis::CollectionView)
-        []
-      else
-        {}
-      end
+    def expand_view(object, fields = true)
+      history[object][fields] = if object.is_a?(Praxis::CollectionView)
+                                  []
+                                else
+                                  {}
+                                end
 
       result = expand_fields(object.contents, fields) do |dumpable, sub_fields|
-        self.expand(dumpable, sub_fields)
+        expand(dumpable, sub_fields)
       end
 
-      if object.kind_of?(Praxis::CollectionView)
+      if object.is_a?(Praxis::CollectionView)
         history[object][fields] << result
       else
         history[object][fields].merge!(result)
@@ -82,41 +80,37 @@ module Praxis
       history[object][fields]
     end
 
-
-    def expand_type(object,fields=true)
+    def expand_type(object, fields = true)
       unless object.respond_to?(:attributes)
         if object.respond_to?(:member_attribute)
-          if history[object].include? fields
-            return history[object][fields]
-          end
-          history[object][fields] = []
-
-          new_fields = fields.kind_of?(Array) ? fields[0] : fields
-
-          result = [self.expand(object.member_attribute.type, new_fields)]
-          history[object][fields].push(*result)
-
-          return result
+          return expand_with_member_attribute(object, fields)
         else
           return true
         end
       end
 
       # just include the full thing if it has no attributes
-      if object.attributes.empty?
-        return true
-      end
+      return true if object.attributes.empty?
 
-      if history[object].include? fields
-        return history[object][fields]
-      end
+      return history[object][fields] if history[object].include? fields
 
       history[object][fields] = {}
       result = expand_fields(object.attributes, fields) do |dumpable, sub_fields|
-        self.expand(dumpable.type, sub_fields)
+        expand(dumpable.type, sub_fields)
       end
       history[object][fields].merge!(result)
     end
 
+    def expand_with_member_attribute(object, fields = true)
+      return history[object][fields] if history[object].include? fields
+      history[object][fields] = []
+
+      new_fields = fields.is_a?(Array) ? fields[0] : fields
+
+      result = [expand(object.member_attribute.type, new_fields)]
+      history[object][fields].push(*result)
+
+      result
+    end
   end
 end

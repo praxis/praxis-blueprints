@@ -1,7 +1,6 @@
+# frozen_string_literal: true
 module Praxis
   module Finalizable
-
-
     def self.extended(klass)
       klass.module_eval do
         @finalizable = Set.new
@@ -26,13 +25,10 @@ module Praxis
       @finalized = true
     end
 
-    def finalize! 
-      self.finalizable.reject(&:finalized?).each do |klass|
-        klass._finalize!
-      end
+    def finalize!
+      finalizable.reject(&:finalized?).each(&:_finalize!)
 
-      self.finalize! unless self.finalizable.all?(&:finalized?)
+      finalize! unless finalizable.all?(&:finalized?)
     end
-
   end
 end

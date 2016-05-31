@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 require 'ostruct'
 
 # Blueprint ==
@@ -18,7 +19,6 @@ module Praxis
 
     @@caching_enabled = false
 
-
     attr_reader :validating
     attr_accessor :object
     attr_accessor :decorators
@@ -34,20 +34,20 @@ module Praxis
       super
 
       klass.instance_eval do
-        @views = Hash.new
-        @options = Hash.new
+        @views = {}
+        @options = {}
         @domain_model = Object
       end
     end
 
     # Override default new behavior to support memoized creation through an IdentityMap
-    def self.new(object, decorators=nil)
+    def self.new(object, decorators = nil)
       if @@caching_enabled && decorators.nil?
         cache = if object.respond_to?(:identity_map) && object.identity_map
-          object.identity_map.blueprint_cache[self]
-        else
-          self.cache
-        end
+                  object.identity_map.blueprint_cache[self]
+                else
+                  self.cache
+                end
 
         return cache[object] ||= begin
           blueprint = self.allocate
@@ -65,14 +65,12 @@ module Praxis
       'hash'
     end
 
-    def self.describe(shallow=false,example: nil, **opts)
+    def self.describe(shallow = false, example: nil, **opts)
       type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
 
-      if example
-        example = example.object
-      end
+      example = example.object if example
 
-      description = self.attribute.type.describe(shallow,example: example, **opts).merge!(id: self.id, name: type_name)
+      description = self.attribute.type.describe(shallow, example: example, **opts).merge!(id: self.id, name: type_name)
       description.delete :anonymous # discard the Struct's view of anonymity, and use the Blueprint's one
       description[:anonymous] = @_anonymous unless @_anonymous.nil?
 
@@ -85,37 +83,30 @@ module Praxis
       description
     end
 
-
-    def self.attributes(opts={}, &block)
+    def self.attributes(opts = {}, &block)
       if block_given?
-        if self.const_defined?(:Struct, false)
-          raise "Redefining Blueprint attributes is not currently supported"
+        raise 'Redefining Blueprint attributes is not currently supported' if self.const_defined?(:Struct, false)
+
+        if opts.key?(:reference) && opts[:reference] != self.reference
+          raise "Reference mismatch in #{self.inspect}. Given :reference option #{opts[:reference].inspect}, while using #{self.reference.inspect}"
+        elsif self.reference
+          opts[:reference] = self.reference # pass the reference Class down
         else
-
-          if opts.has_key?(:reference) && opts[:reference] != self.reference
-            raise "Reference mismatch in #{self.inspect}. Given :reference option #{opts[:reference].inspect}, while using #{self.reference.inspect}"
-          elsif self.reference
-            opts[:reference] = self.reference #pass the reference Class down
-          else
-            opts[:reference] = self
-          end
-
-          @options.merge!(opts)
-          @block = block
+          opts[:reference] = self
         end
+
+        @options.merge!(opts)
+        @block = block
 
         return @attribute
       end
 
-      unless @attribute
-        raise "@attribute not defined yet for #{self.name}"
-      end
+      raise "@attribute not defined yet for #{self.name}" unless @attribute
 
       @attribute.attributes
     end
 
-
-    def self.domain_model(klass=nil)
+    def self.domain_model(klass = nil)
       return @domain_model if klass.nil?
       @domain_model = klass
     end
@@ -123,26 +114,25 @@ module Praxis
     def self.check_option!(name, value)
       case name
       when :identity
-        raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.kind_of?(::Symbol)
+        raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.is_a?(::Symbol)
         return :ok
       else
         return Attributor::Struct.check_option!(name, value)
       end
     end
 
-
-    def self.load(value,context=Attributor::DEFAULT_ROOT_CONTEXT, **options)
+    def self.load(value, context = Attributor::DEFAULT_ROOT_CONTEXT, **options)
       case value
       when self
         value
       when nil, Hash, String
         # Need to parse/deserialize first
         # or apply default/recursive loading options if necessary
-        if (value = self.attribute.load(value,context, **options))
+        if (value = self.attribute.load(value, context, **options))
           self.new(value)
         end
       else
-        if value.kind_of?(self.domain_model) || value.kind_of?(self::Struct)
+        if value.is_a?(self.domain_model) || value.is_a?(self::Struct)
           # Wrap the value directly
           self.new(value)
         else
@@ -153,7 +143,7 @@ module Praxis
     end
 
     class << self
-      alias_method :from, :load
+      alias from load
     end
 
     def self.caching_enabled?
@@ -175,34 +165,32 @@ module Praxis
 
     def self.valid_type?(value)
       # FIXME: this should be more... ducklike
-      value.kind_of?(self) || value.kind_of?(self.attribute.type)
+      value.is_a?(self) || value.is_a?(self.attribute.type)
     end
 
-    def self.example(context=nil, **values)
+    def self.example(context = nil, **values)
       context = case context
-      when nil
-        ["#{self.name}-#{values.object_id.to_s}"]
-      when ::String
-        [context]
-      else
-        context
-      end
+                when nil
+                  ["#{self.name}-#{values.object_id}"]
+                when ::String
+                  [context]
+                else
+                  context
+                end
 
       self.new(self.attribute.example(context, values: values))
     end
 
-
-    def self.validate(value, context=Attributor::DEFAULT_ROOT_CONTEXT, _attribute=nil)
-      raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
+    def self.validate(value, context = Attributor::DEFAULT_ROOT_CONTEXT, _attribute = nil)
+      raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context.nil?
       context = [context] if context.is_a? ::String
 
-      unless value.kind_of?(self)
+      unless value.is_a?(self)
         raise ArgumentError, "Error validating #{Attributor.humanize_context(context)} as #{self.name} for an object of type #{value.class.name}."
       end
 
       value.validate(context)
     end
-
 
     def self.view(name, **options, &block)
       if block_given?
@@ -219,7 +207,7 @@ module Praxis
       object.render(view: view, context: context, **opts)
     end
     class << self
-      alias_method :render, :dump
+      alias render dump
     end
 
     # Internal finalize! logic
@@ -235,7 +223,7 @@ module Praxis
     end
 
     def self.resolve_domain_model!
-      return unless self.domain_model.kind_of?(String)
+      return unless self.domain_model.is_a?(String)
 
       @domain_model = self.domain_model.constantize
     end
@@ -248,7 +236,7 @@ module Praxis
     end
 
     def self.define_readers!
-      self.attributes.each do |name, attribute|
+      self.attributes.each do |name, _attribute|
         name = name.to_sym
 
         # Don't redefine existing methods
@@ -257,7 +245,6 @@ module Praxis
         define_reader! name
       end
     end
-
 
     def self.define_reader!(name)
       attribute = self.attributes[name]
@@ -270,18 +257,16 @@ module Praxis
           @decorators.send(name)
         else
           value = @object.__send__(name)
-          return value if value.nil? || value.kind_of?(attribute.type)
+          return value if value.nil? || value.is_a?(attribute.type)
           attribute.load(value)
         end
       end
     end
 
-
-
     def self.generate_master_view!
       attributes = self.attributes
       view :master do
-        attributes.each do | name, attr |
+        attributes.each do |name, _attr|
           # Note: we can freely pass master view for attributes that aren't blueprint/containers because
           # their dump methods will ignore it (they always dump everything regardless)
           attribute name, view: :default
@@ -289,33 +274,29 @@ module Praxis
       end
     end
 
-
-    def initialize(object, decorators=nil)
+    def initialize(object, decorators = nil)
       # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
 
-      @decorators = if decorators.kind_of?(Hash) && decorators.any?
-        OpenStruct.new(decorators)
-      else
-        decorators
-      end
+      @decorators = if decorators.is_a?(Hash) && decorators.any?
+                      OpenStruct.new(decorators)
+                    else
+                      decorators
+                    end
 
       @validating = false
     end
 
-
     # Render the wrapped data with the given view
-    def render(view_name=nil, context: Attributor::DEFAULT_ROOT_CONTEXT,renderer: Renderer.new, **opts)
-      if view_name != nil
-        warn "DEPRECATED: please do not pass the view name as the first parameter in Blueprint.render, pass through the view: named param instead."
+    def render(view_name = nil, context: Attributor::DEFAULT_ROOT_CONTEXT, renderer: Renderer.new, **opts)
+      if !view_name.nil?
+        warn 'DEPRECATED: please do not pass the view name as the first parameter in Blueprint.render, pass through the view: named param instead.'
       elsif opts.key?(:view)
         view_name = opts[:view]
       end
 
       fields = opts[:fields]
-      if view_name.nil? && fields.nil?
-        view_name = :default
-      end
+      view_name = :default if view_name.nil? && fields.nil?
 
       if view_name
         unless (view = self.class.views[view_name])
@@ -326,7 +307,7 @@ module Praxis
 
       # Accept a simple array of fields, and transform it to a 1-level hash with true values
       if fields.is_a? Array
-        fields = fields.each_with_object({}) {|field, hash| hash[field] = true }
+        fields = fields.each_with_object({}) { |field, hash| hash[field] = true }
       end
 
       # expand fields
@@ -334,24 +315,22 @@ module Praxis
 
       renderer.render(self, expanded_fields, context: context)
     end
-    alias_method :to_hash, :render
-    alias_method :dump, :render
+    alias to_hash render
+    alias dump render
 
-    def validate(context=Attributor::DEFAULT_ROOT_CONTEXT)
-      raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context == nil
+    def validate(context = Attributor::DEFAULT_ROOT_CONTEXT)
+      raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context.nil?
       context = [context] if context.is_a? ::String
       keys_with_values = []
 
-      raise "validation conflict" if @validating
+      raise 'validation conflict' if @validating
       @validating = true
 
       errors = []
       self.class.attributes.each do |sub_attribute_name, sub_attribute|
-        sub_context = self.class.generate_subcontext(context,sub_attribute_name)
+        sub_context = self.class.generate_subcontext(context, sub_attribute_name)
         value = self.send(sub_attribute_name)
-        unless value.nil?
-          keys_with_values << sub_attribute_name
-        end
+        keys_with_values << sub_attribute_name unless value.nil?
 
         if value.respond_to?(:validating) # really, it's a thing with sub-attributes
           next if value.validating
@@ -371,7 +350,5 @@ module Praxis
     def _get_attr(name)
       self.send(name)
     end
-
   end
-
 end

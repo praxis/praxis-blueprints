@@ -1,3 +1,4 @@
+# frozen_string_literal: true
 class Person < Praxis::Blueprint
   attributes do
     attribute :name, String, example: /[:first_name:]/
@@ -58,24 +59,21 @@ class Person < Praxis::Blueprint
     attribute :address
     attribute :alive
   end
-
 end
 
-
-class Address  < Praxis::Blueprint
+class Address < Praxis::Blueprint
   attributes do
     attribute :id, Integer
     attribute :name, String
     attribute :street, String
-    attribute :state, String, values: %w{OR CA}
+    attribute :state, String, values: %w(OR CA)
 
-    attribute :resident, Person, example: proc { |address,context| Person.example(context, address: address) }
+    attribute :resident, Person, example: proc { |address, context| Person.example(context, address: address) }
   end
 
   view :default do
     attribute :street
     attribute :state
-
   end
 
   view :circular do
@@ -90,27 +88,21 @@ class Address  < Praxis::Blueprint
     attribute :street
     attribute :resident
   end
-
 end
 
-
 class FullName < Attributor::Model
-
   attributes do
     attribute :first, String, example: /[:first_name:]/
     attribute :last, String, example: /[:last_name:]/
   end
-
 end
 
-
-class SimpleHash  < Attributor::Model
+class SimpleHash < Attributor::Model
   attributes do
     attribute :id, Integer
-    attribute :hash,  Hash
+    attribute :hash, Hash
   end
 end
-
 
 class SimpleHashCollection < Attributor::Model
   attributes do

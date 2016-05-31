@@ -1,12 +1,10 @@
+# frozen_string_literal: true
 module Praxis
-
   class CollectionView < View
-    def initialize(name, schema, member_view=nil)
-      super(name,schema)
+    def initialize(name, schema, member_view = nil)
+      super(name, schema)
 
-      if member_view
-        @_lazy_view = member_view
-      end
+      @_lazy_view = member_view if member_view
     end
 
     def contents
@@ -17,20 +15,19 @@ module Praxis
       super
     end
 
-    def example(context=Attributor::DEFAULT_ROOT_CONTEXT)
-      collection = 3.times.collect do |i|
+    def example(context = Attributor::DEFAULT_ROOT_CONTEXT)
+      collection = Array.new(3) do |i|
         subcontext = context + ["at(#{i})"]
-        self.schema.example(subcontext)
+        schema.example(subcontext)
       end
       opts = {}
       opts[:context] = context if context
 
-      self.render(collection, **opts)
+      render(collection, **opts)
     end
 
     def describe
       super.merge(type: :collection)
     end
-
   end
 end
