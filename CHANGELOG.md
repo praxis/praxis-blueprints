@@ -2,6 +2,9 @@
 
 ## next
 
+* Include Attributor::Dumpable in Blueprint, so it renders (semi) correctly if
+  rendered with just `true` specified for fields.
+
 ## 3.2
 
 * Ensure we call `object.dump` in Renderer when fully dumping an instance (or array of instances) that have the Attributor::Dumpable module (i.e., when no subfields were selected)

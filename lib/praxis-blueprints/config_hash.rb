@@ -1,19 +1,19 @@
+# frozen_string_literal: true
 module Praxis
   class ConfigHash < BasicObject
-
     attr_reader :hash
 
-    def self.from(hash={},&block)
-      self.new(hash,&block)
+    def self.from(hash = {}, &block)
+      new(hash, &block)
     end
 
-    def initialize(hash={},&block)
+    def initialize(hash = {}, &block)
       @hash = hash
       @block = block
     end
 
     def to_hash
-      self.instance_eval(&@block)
+      instance_eval(&@block)
       @hash
     end
 
@@ -28,13 +28,12 @@ module Praxis
           end
         end
       else
-        if rest.any?
-          @hash[name] = [value] + rest
-        else
-          @hash[name] = value
-        end
+        @hash[name] = if rest.any?
+                        [value] + rest
+                      else
+                        value
+                      end
       end
     end
-
   end
 end

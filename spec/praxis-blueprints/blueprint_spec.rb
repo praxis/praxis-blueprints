@@ -1,10 +1,10 @@
+# frozen_string_literal: true
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe Praxis::Blueprint do
-
   subject(:blueprint_class) { Person }
 
-  its(:family){ should eq('hash') }
+  its(:family) { should eq('hash') }
 
   context 'deterministic examples' do
     it 'works' do
@@ -52,7 +52,6 @@ describe Praxis::Blueprint do
       its(:finalized?) { should be(true) }
     end
 
-
     context '.finalize on that subclass' do
       before do
         blueprint_class.should_receive(:_finalize!).and_call_original
@@ -60,9 +59,7 @@ describe Praxis::Blueprint do
       end
 
       its(:finalized?) { should be(true) }
-
     end
-
   end
 
   context 'creating a base abstract Blueprint class without attributes' do
@@ -76,7 +73,6 @@ describe Praxis::Blueprint do
       blueprint_class.finalize!
       blueprint_class.finalized?.should be(true)
     end
-
   end
 
   it 'has an inner Struct class for the attributes' do
@@ -88,7 +84,6 @@ describe Praxis::Blueprint do
     it 'sorta has view objects' do
       blueprint_class.views.should have_key(:default)
     end
-
   end
 
   context 'an instance' do
@@ -113,24 +108,22 @@ describe Praxis::Blueprint do
       end
     end
 
-
     context 'from Blueprint.example' do
       subject(:blueprint_instance) { blueprint_class.example }
       it_behaves_like 'a blueprint instance'
     end
 
     context 'wrapping an object' do
-
       let(:data) do
         {
           name: 'Bob',
           full_name: FullName.example,
           address: Address.example,
-          email: "bob@example.com",
+          email: 'bob@example.com',
           aliases: [],
           prior_addresses: [],
-          parents: { father: Randgen.first_name, mother: Randgen.first_name},
-          href: "www.example.com",
+          parents: { father: Randgen.first_name, mother: Randgen.first_name },
+          href: 'www.example.com',
           alive: true
         }
       end
@@ -138,7 +131,6 @@ describe Praxis::Blueprint do
       let(:resource) { blueprint_class.load(data).object }
 
       subject(:blueprint_instance) { blueprint_class.new(resource) }
-
 
       it_behaves_like 'a blueprint instance'
 
@@ -148,7 +140,7 @@ describe Praxis::Blueprint do
         context 'with caching enabled' do
           around do |example|
             Praxis::Blueprint.caching_enabled = true
-            Praxis::Blueprint.cache = Hash.new { |h,k| h[k] = Hash.new }
+            Praxis::Blueprint.cache = Hash.new { |h, k| h[k] = {} }
             example.run
 
             Praxis::Blueprint.caching_enabled = false
@@ -165,15 +157,12 @@ describe Praxis::Blueprint do
         context 'with caching disabled' do
           it { should_not be blueprint_instance }
         end
-
       end
-
     end
-
   end
 
   context '.describe' do
-    let(:shallow ) { false }
+    let(:shallow) { false }
     let(:example_object) { nil }
 
     before do
@@ -187,17 +176,16 @@ describe Praxis::Blueprint do
         expect(blueprint_class.attribute.type).to receive(:describe).with(true, example: example_object).twice.and_call_original
       end
 
-      subject(:output){ blueprint_class.describe }
+      subject(:output) { blueprint_class.describe }
 
-      its([:name]){ should eq(blueprint_class.name)}
-      its([:id]){ should eq(blueprint_class.id)}
-      its([:views]){ should be_kind_of(Hash)}
-      its(:keys){ should_not include(:anonymous) }
+      its([:name]) { should eq(blueprint_class.name) }
+      its([:id]) { should eq(blueprint_class.id) }
+      its([:views]) { should be_kind_of(Hash) }
+      its(:keys) { should_not include(:anonymous) }
       it 'should contain the an entry for each view' do
         subject[:views].keys.should include(:default, :current, :extended, :master)
       end
     end
-
 
     context 'for shallow descriptions' do
       let(:shallow) { true }
@@ -218,8 +206,8 @@ describe Praxis::Blueprint do
         end
         it 'reports their anonymous-ness' do
           description = blueprint_class.describe(true)
-          expect( description ).to have_key(:anonymous)
-          expect( description[:anonymous] ).to be(true)
+          expect(description).to have_key(:anonymous)
+          expect(description[:anonymous]).to be(true)
         end
       end
     end
@@ -252,7 +240,7 @@ describe Praxis::Blueprint do
   end
 
   context '.validate' do
-    let(:hash) { {name: 'bob'} }
+    let(:hash) { { name: 'bob' } }
     let(:person) { Person.load(hash) }
     subject(:errors) { person.validate }
 
@@ -261,7 +249,7 @@ describe Praxis::Blueprint do
     end
 
     context 'with invalid sub-attribute' do
-      let(:hash) { {name: 'bob', address: {state: "ME"}} }
+      let(:hash) { { name: 'bob', address: { state: 'ME' } } }
 
       it { should have(1).item }
       its(:first) { should =~ /Attribute \$.address.state/ }
@@ -269,9 +257,9 @@ describe Praxis::Blueprint do
 
     context 'for objects of the wrong type' do
       it 'raises an error' do
-        expect {
+        expect do
           Person.validate(Object.new)
-        }.to raise_error(ArgumentError, /Error validating .* as Person for an object of type Object/)
+        end.to raise_error(ArgumentError, /Error validating .* as Person for an object of type Object/)
       end
     end
   end
@@ -279,9 +267,9 @@ describe Praxis::Blueprint do
   context '.load' do
     let(:hash) do
       {
-        :name => 'Bob',
-        :full_name => {:first => 'Robert', :last => 'Robertson'},
-        :address => {:street => 'main', :state => 'OR'}
+        name: 'Bob',
+        full_name: { first: 'Robert', last: 'Robertson' },
+        address: { street: 'main', state: 'OR' }
       }
     end
     subject(:person) { Person.load(hash) }
@@ -298,9 +286,7 @@ describe Praxis::Blueprint do
         it { should be_kind_of(FullName) }
       end
     end
-
   end
-
 
   context 'decorators' do
     let(:name) { 'Soren II' }
@@ -308,9 +294,8 @@ describe Praxis::Blueprint do
     let(:object) { Person.example.object }
     subject(:person) { Person.new(object, decorators) }
 
-
     context 'as a hash' do
-      let(:decorators) { {name: name} }
+      let(:decorators) { { name: name } }
       it do
         person.name.should eq('Soren II')
       end
@@ -318,7 +303,7 @@ describe Praxis::Blueprint do
       its(:name) { should be(name) }
 
       context 'an additional instance with the equivalent hash' do
-        subject(:additional_person) { Person.new(object, {name: name}) }
+        subject(:additional_person) { Person.new(object, name: name) }
         it { should_not be person }
       end
 
@@ -334,7 +319,7 @@ describe Praxis::Blueprint do
     end
 
     context 'as an object' do
-      let(:decorators) { double("decorators", name: name) }
+      let(:decorators) { double('decorators', name: name) }
       its(:name) { should be(name) }
 
       context 'an additional instance with the same object' do
@@ -342,13 +327,10 @@ describe Praxis::Blueprint do
         it { should_not be person }
       end
     end
-
   end
-
 
   context 'with a provided :reference option on attributes' do
     context 'that does not match the value set on the class' do
-
       subject(:mismatched_reference) do
         Class.new(Praxis::Blueprint) do
           self.reference = Class.new(Praxis::Blueprint)
@@ -357,14 +339,12 @@ describe Praxis::Blueprint do
       end
 
       it 'should raise an error' do
-        expect {
+        expect do
           mismatched_reference.attributes
-        }.to raise_error
+        end.to raise_error
       end
-
     end
   end
-
 
   context '.example' do
     context 'with some attribute values provided' do
@@ -377,7 +357,6 @@ describe Praxis::Blueprint do
   context '.render' do
     let(:person) { Person.example('1') }
     it 'is an alias to dump' do
-
       person.object.contents
       rendered = Person.render(person, view: :default)
       dumped = Person.dump(person, view: :default)
@@ -391,10 +370,7 @@ describe Praxis::Blueprint do
     let(:render_opts) { {} }
     subject(:output) { person.render(view: view_name, **render_opts) }
 
-
-
     context 'with a sub-attribute that is a blueprint' do
-
       it { should have_key(:name) }
       it { should have_key(:address) }
       it 'renders the sub-attribute correctly' do
@@ -403,13 +379,12 @@ describe Praxis::Blueprint do
       end
 
       it 'reports a dump error with the appropriate context' do
-        person.address.should_receive(:state).and_raise("Kaboom")
-        expect {
+        person.address.should_receive(:state).and_raise('Kaboom')
+        expect do
           person.render(view: view_name, context: ['special_root'])
-        }.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
+        end.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
       end
     end
-
 
     context 'with sub-attribute that is an Attributor::Model' do
       it { should have_key(:full_name) }
@@ -422,7 +397,7 @@ describe Praxis::Blueprint do
 
     context 'using the `fields` option' do
       context 'as a hash' do
-        subject(:output) { person.render(fields: {address: {state: true}}) }
+        subject(:output) { person.render(fields: { address: { state: true } }) }
         it 'should only have the address rendered' do
           output.keys.should eq [:address]
         end
@@ -438,5 +413,4 @@ describe Praxis::Blueprint do
       end
     end
   end
-
 end

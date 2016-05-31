@@ -1,7 +1,7 @@
+# frozen_string_literal: true
 require_relative '../spec_helper'
 
 describe Praxis::View do
-
   let(:person) { Person.example(['person']) }
   let(:address) { person.address }
 
@@ -34,7 +34,7 @@ describe Praxis::View do
     subject(:contents) { view.contents }
     its(:keys) { should match_array([:name, :email, :full_name, :parents, :address, :prior_addresses, :work_address]) }
     it 'saves attributes defined on the Blueprint' do
-      [:name, :email, :full_name ].each do |attr|
+      [:name, :email, :full_name].each do |attr|
         contents[attr].should be Person.attributes[attr]
       end
     end
@@ -48,7 +48,6 @@ describe Praxis::View do
       contents[:prior_addresses].should be_kind_of(Praxis::CollectionView)
       contents[:prior_addresses].contents.should eq Address.views[:state].contents
     end
-
 
     context 'creating subviews' do
       it 'creates subviews when a block is used' do
@@ -85,33 +84,30 @@ describe Praxis::View do
           it 'creates the sub-CollectionViews with a member view with the same contents of the parent' do
             contents[:friends].should be_kind_of(Praxis::CollectionView)
             contents[:friends].contents.should eq(view.contents)
-            contents[:friends].contents.keys.should match_array([:myself,:friends])
+            contents[:friends].contents.keys.should match_array([:myself, :friends])
           end
         end
-
       end
     end
-
   end
 
   context '#describe' do
-    subject(:description) { view.describe}
-    its(:keys){ should =~ [:attributes, :type] }
+    subject(:description) { view.describe }
+    its(:keys) { should =~ [:attributes, :type] }
     its([:type]) { should eq(:standard) }
     context 'returns attributes' do
       subject { description[:attributes] }
 
-      its(:keys){ should match_array view.contents.keys }
+      its(:keys) { should match_array view.contents.keys }
 
       it 'should return empty hashes for attributes with no specially defined view' do
         subject[:name].should eq({})
         subject[:email].should eq({})
       end
       it 'should return the view name if specified' do
-        subject[:address].should eq({view: :extended})
-        subject[:prior_addresses].should eq({view: :state})
+        subject[:address].should eq(view: :extended)
+        subject[:prior_addresses].should eq(view: :state)
       end
     end
   end
-
 end
