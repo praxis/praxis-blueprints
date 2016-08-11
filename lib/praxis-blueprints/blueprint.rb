@@ -337,11 +337,11 @@ module Praxis
         if value.respond_to?(:validating) # really, it's a thing with sub-attributes
           next if value.validating
         end
-        errors.push(*sub_attribute.validate(value, sub_context))
+        errors.concat(sub_attribute.validate(value, sub_context))
       end
       self.class.attribute.type.requirements.each do |req|
         validation_errors = req.validate(keys_with_values, context)
-        errors.push(*validation_errors) unless validation_errors.empty?
+        errors.concat(validation_errors) unless validation_errors.empty?
       end
       errors
     ensure
