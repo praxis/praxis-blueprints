@@ -108,7 +108,7 @@ module Praxis
       new_fields = fields.is_a?(Array) ? fields[0] : fields
 
       result = [expand(object.member_attribute.type, new_fields)]
-      history[object][fields].push(*result)
+      history[object][fields].concat(result)
 
       result
     end

@@ -17,7 +17,11 @@ module Praxis
       @hash
     end
 
-    def method_missing(name, value, *rest, &block)
+    def respond_to_missing?(_method_name, _include_private = false)
+      true
+    end
+
+    def method_missing(name, value, *rest, &block) # rubocop:disable Style/MethodMissing
       if (existing = @hash[name])
         if block
           existing << [value, block]

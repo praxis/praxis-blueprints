@@ -100,6 +100,7 @@ describe Praxis::Renderer do
 
   context 'with include_nil: true' do
     let(:renderer) { Praxis::Renderer.new(include_nil: true) }
+    let(:address) { nil }
 
     it 'renders attributes with nil values' do
       output.should have_key :email
@@ -107,6 +108,11 @@ describe Praxis::Renderer do
 
       output.should have_key :work_address
       output[:work_address].should be nil
+    end
+
+    it 'renders nil directly for nil subobjects' do
+      output.should have_key :address
+      output[:address].should be nil
     end
   end
 
