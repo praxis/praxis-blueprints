@@ -79,7 +79,10 @@ module Praxis
             raise Attributor::DumpError, context: context, name: key, type: object.class, original_exception: e
           end
 
-          next if value.nil? && !include_nil
+          if value.nil?
+            hash[key] = nil if self.include_nil
+            next
+          end
 
           if subfields == true
             hash[key] = case value
