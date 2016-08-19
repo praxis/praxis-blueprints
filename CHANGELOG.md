@@ -2,6 +2,8 @@
 
 ## next
 
+## 3.3
+
 * Include Attributor::Dumpable in Blueprint, so it renders (semi) correctly if
   rendered with just `true` specified for fields.
 * Fix bug rendering subobjects with nil values (manifested when `include_nil: true` there’s an explicit subsection of fields)
