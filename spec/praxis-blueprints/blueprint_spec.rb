@@ -229,8 +229,10 @@ describe Praxis::Blueprint do
         output[:attributes][:name][:example].should eq example.name
         output[:attributes][:age][:example].should eq example.age
 
+        output[:attributes][:aliases].should have_key(:example)
+        output[:attributes][:aliases][:example].should eq example.aliases.dump
+
         output[:attributes][:full_name].should_not have_key(:example)
-        output[:attributes][:aliases].should_not have_key(:example)
 
         parents_attributes = output[:attributes][:parents][:type][:attributes]
         parents_attributes[:father][:example].should eq example.parents.father
