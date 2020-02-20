@@ -47,7 +47,7 @@ module Praxis
           render(sub_object, sub_fields, view, context: sub_context)
         end
       elsif object.is_a? Praxis::Blueprint
-        @cache[object.object_id][fields.object_id] ||= _render(object, fields, view, context: context)
+        @cache[object._cache_key][fields] ||= _render(object, fields, view, context: context)
       else
         _render(object, fields, view, context: context)
       end

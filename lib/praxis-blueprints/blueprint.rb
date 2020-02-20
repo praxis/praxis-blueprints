@@ -289,6 +289,10 @@ module Praxis
       @validating = false
     end
 
+    def _cache_key
+      self.object
+    end
+
     # Render the wrapped data with the given view
     def render(view_name = nil, context: Attributor::DEFAULT_ROOT_CONTEXT, renderer: Renderer.new, **opts)
       if !view_name.nil?

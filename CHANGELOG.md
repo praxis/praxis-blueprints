@@ -2,6 +2,10 @@
 
 ## next
 
+## 3.4
+
+* Introduce an overridable `_cache_key` for Blueprints. Default it to the strict `Object` reference (instead of the `.object_id` key used before, to avoid GC re-assigning previously rendered objects)
+
 ## 3.3
 
 * Include Attributor::Dumpable in Blueprint, so it renders (semi) correctly if
