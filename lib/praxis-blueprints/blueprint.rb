@@ -275,7 +275,7 @@ module Praxis
         end
       end
     end
-
+    
     def initialize(object, decorators = nil)
       # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
@@ -287,6 +287,12 @@ module Praxis
                     end
 
       @validating = false
+    end
+
+    # By default we'll use the object identity, to avoid rendering the same object twice
+    # Override, if there is a better way cache things up
+    def _cache_key
+      self.object
     end
 
     # Render the wrapped data with the given view
@@ -317,8 +323,12 @@ module Praxis
 
       renderer.render(self, expanded_fields, context: context)
     end
-    alias to_hash render
+
     alias dump render
+
+    def to_h
+      Attributor.recursive_to_h(@object)
+    end
 
     def validate(context = Attributor::DEFAULT_ROOT_CONTEXT)
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context.nil?

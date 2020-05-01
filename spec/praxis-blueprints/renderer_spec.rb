@@ -150,7 +150,7 @@ describe Praxis::Renderer do
 
   context 'rendering stuff that breaks badly' do
     it 'does not break badly' do
-      renderer.render(person, tags: [true])
+      renderer.render(person, {tags: [true]})
     end
   end
 
