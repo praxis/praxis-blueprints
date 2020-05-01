@@ -28,21 +28,23 @@ Gem::Specification.new do |spec|
   spec.require_paths = ['lib']
 
   spec.add_runtime_dependency('randexp', ['~> 0'])
-  spec.add_runtime_dependency('attributor', ['>= 5.1'])
+  spec.add_runtime_dependency('attributor', ['>= 5.4'])
   spec.add_runtime_dependency('activesupport', ['>= 3'])
 
-  spec.add_development_dependency 'bundler', '~> 1.6'
-  spec.add_development_dependency 'rake', '~> 0'
+  spec.add_development_dependency 'bundler'
+  spec.add_development_dependency 'rake'
 
   spec.add_development_dependency('redcarpet', ['< 3.0'])
   spec.add_development_dependency('yard', ['~> 0.8.7'])
   spec.add_development_dependency('guard', ['~> 2'])
   spec.add_development_dependency('guard-rspec', ['>= 0'])
-  spec.add_development_dependency('rspec', ['< 2.99'])
-  spec.add_development_dependency('pry', ['~> 0'])
-  spec.add_development_dependency('pry-byebug', ['~> 1'])
-  spec.add_development_dependency('pry-stack_explorer', ['~> 0'])
-  spec.add_development_dependency('fuubar', ['~> 1'])
+  spec.add_development_dependency('rspec')
+  spec.add_development_dependency('rspec-its')
+  spec.add_development_dependency('rspec-collection_matchers')
+  spec.add_development_dependency('pry')
+  spec.add_development_dependency('pry-byebug')
+  spec.add_development_dependency('pry-stack_explorer')
+  spec.add_development_dependency('fuubar')
   spec.add_development_dependency('coveralls')
   spec.add_development_dependency 'rubocop'
   spec.add_development_dependency 'guard-rubocop'

@@ -47,7 +47,7 @@ module Praxis
           render(sub_object, sub_fields, view, context: sub_context)
         end
       elsif object.is_a? Praxis::Blueprint
-        @cache[object.object_id][fields.object_id] ||= _render(object, fields, view, context: context)
+        @cache[object._cache_key][fields] ||= _render(object, fields, view, context: context)
       else
         _render(object, fields, view, context: context)
       end
@@ -76,7 +76,7 @@ module Praxis
           begin
             value = object._get_attr(key)
           rescue => e
-            raise Attributor::DumpError, context: context, name: key, type: object.class, original_exception: e
+            raise Attributor::DumpError.new(context: context, name: key, type: object.class, original_exception: e)
           end
 
           if value.nil?

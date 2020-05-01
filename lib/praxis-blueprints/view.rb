@@ -35,8 +35,6 @@ module Praxis
       renderer.render(object, expanded_fields, context: context)
     end
 
-    alias to_hash render # Why did we need this again?
-
     def attribute(name, **opts, &block)
       raise AttributorException, "Attribute names must be symbols, got: #{name.inspect}" unless name.is_a? ::Symbol
 
@@ -78,7 +76,7 @@ module Praxis
       object = schema.example(context)
       opts = {}
       opts[:context] = context if context
-      render(object, opts)
+      render(object, **opts)
     end
 
     def describe
