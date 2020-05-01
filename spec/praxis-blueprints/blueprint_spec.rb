@@ -102,14 +102,20 @@ describe Praxis::Blueprint do
 
       context 'validation' do
         subject(:errors) { blueprint_class.validate(blueprint_instance) }
-        pending do
-          it { should be_empty }
-        end
+        it { should be_empty }
       end
     end
 
     context 'from Blueprint.example' do
-      subject(:blueprint_instance) { blueprint_class.example }
+      subject(:blueprint_instance) do
+        blueprint_class.example('ExamplePerson', 
+          address: nil,
+          prior_addresses: [],
+          work_address: nil,
+          myself: nil,
+          friends: []
+        )
+      end
       it_behaves_like 'a blueprint instance'
     end
 
@@ -118,7 +124,7 @@ describe Praxis::Blueprint do
         {
           name: 'Bob',
           full_name: FullName.example,
-          address: Address.example,
+          address: nil,
           email: 'bob@example.com',
           aliases: [],
           prior_addresses: [],
