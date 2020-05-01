@@ -35,7 +35,7 @@ Gem::Specification.new do |spec|
   spec.add_development_dependency 'rake'
 
   spec.add_development_dependency('redcarpet', ['< 3.0'])
-  spec.add_development_dependency('yard', ['~> 0.8.7'])
+  spec.add_development_dependency('yard')
   spec.add_development_dependency('guard', ['~> 2'])
   spec.add_development_dependency('guard-rspec', ['>= 0'])
   spec.add_development_dependency('rspec')
