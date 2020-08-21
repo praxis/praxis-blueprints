@@ -2,6 +2,10 @@
 
 ## next
 
+## 3.4
+
+* Upgrade to latest Attributor gem (which has JSON-schema support), and add json-schema methods for blueprints.
+
 ## 3.3
 
 * Include Attributor::Dumpable in Blueprint, so it renders (semi) correctly if

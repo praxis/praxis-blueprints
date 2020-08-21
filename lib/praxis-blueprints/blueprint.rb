@@ -362,5 +362,14 @@ module Praxis
     def _get_attr(name)
       self.send(name)
     end
+
+    # Delegates the json-schema methods to the underlying attribute/member_type
+    def self.as_json_schema(**args)
+      @attribute.type.as_json_schema(args)
+    end
+    
+    def self.json_schema_type
+      @attribute.type.json_schema_type
+    end
   end
 end

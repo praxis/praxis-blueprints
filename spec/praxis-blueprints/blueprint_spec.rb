@@ -421,4 +421,17 @@ describe Praxis::Blueprint do
       end
     end
   end
+
+  context '.as_json_schema' do
+    it 'delegates to the attribute type' do
+      Person.attribute.type.should receive(:as_json_schema)
+      Person.as_json_schema
+    end
+  end
+  context '.json_schema_type' do
+    it 'delegates to the attribute type' do
+      Person.attribute.type.should receive(:json_schema_type)
+      Person.json_schema_type
+    end
+  end
 end
