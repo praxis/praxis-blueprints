@@ -32,11 +32,11 @@ describe Praxis::Renderer do
         street: true,
         resident:  { name: true }
       },
-      prior_addresses: [{ name: true }],
+      prior_addresses: { name: true },
       work_address: true,
       alive: true,
       metadata: true,
-      aliases: [true]
+      aliases: true
     }
   end
 
@@ -79,25 +79,6 @@ describe Praxis::Renderer do
     output.should_not have_key(:email)
   end
 
-  it 'sends the correct ActiveSupport::Notification' do
-    fields = {
-      name: true,
-      email: true
-    }
-
-    notification_payload = {
-      blueprint: person,
-      view: nil,
-      fields: fields
-    }
-
-    ActiveSupport::Notifications.should_receive(:instrument)
-                                .with('praxis.blueprint.render', notification_payload)
-                                .and_call_original
-
-    renderer.render(person, fields)
-  end
-
   context 'with include_nil: true' do
     let(:renderer) { Praxis::Renderer.new(include_nil: true) }
     let(:address) { nil }
@@ -116,17 +97,6 @@ describe Praxis::Renderer do
     end
   end
 
-  context '#render_collection' do
-    let(:people) { Array.new(10) { Person.example(address: address, email: nil) } }
-    subject(:output) { renderer.render_collection(people, fields) }
-
-    it { should have(10).items }
-
-    it 'renders the collection' do
-      output.first.should eq(renderer.render(people.first, fields))
-    end
-  end
-
   context 'rendering a two-dimmensional collection' do
     let(:names) { Array.new(9) { |i| Address.example(i.to_s, name: i.to_s) } }
     let(:matrix_type) do
@@ -135,10 +105,10 @@ describe Praxis::Renderer do
 
     let(:matrix) { matrix_type.load(names.each_slice(3).collect { |slice| slice }) }
 
-    let(:fields) { [[{ name: true }]] }
+    let(:fields) { { name: true } }
 
     it 'renders with render_collection and per-element field spec' do
-      rendered = renderer.render_collection(matrix, fields.first)
+      rendered = renderer.render(matrix, fields)
       rendered.flatten.collect { |r| r[:name] }.should eq((0..8).collect(&:to_s))
     end
 
@@ -150,28 +120,18 @@ describe Praxis::Renderer do
 
   context 'rendering stuff that breaks badly' do
     it 'does not break badly' do
-      renderer.render(person, {tags: [true]})
+      renderer.render(person, {tags: true})
     end
   end
 
   context 'caching rendered objects' do
-    let(:fields) { Praxis::FieldExpander.expand(Person, full_name: true) }
+    let(:fields) { {full_name: true} }
     it 'caches and returns identical results for the same field objects' do
       expect(person).to receive(:full_name).once.and_call_original
 
       render_1 = renderer.render(person, fields)
       render_2 = renderer.render(person, fields)
       expect(render_1).to be(render_2)
-    end
-  end
-
-  context 'circular rendering' do
-    it do
-      field_expander = Praxis::FieldExpander.new
-      fields = field_expander.expand(Person, true)
-
-      person.object.address.object.resident = person
-      expect { renderer.render(person, fields) }.to raise_error(Praxis::Renderer::CircularRenderingError)
     end
   end
 
@@ -198,7 +158,7 @@ describe Praxis::Renderer do
     let(:fields) do
       {
         id: true,
-        hash_collection: [true]
+        hash_collection: true
       }
     end
 

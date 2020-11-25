@@ -80,12 +80,12 @@ describe Praxis::Blueprint do
     blueprint_class.attribute.type.should be blueprint_class::Struct
   end
 
-  context '.views' do
-    it { blueprint_class.should respond_to(:views) }
-    it 'sorta has view objects' do
-      blueprint_class.views.should have_key(:default)
-    end
-  end
+  # context '.views' do
+  #   it { blueprint_class.should respond_to(:views) }
+  #   it 'sorta has view objects' do
+  #     blueprint_class.views.should have_key(:default)
+  #   end
+  # end
 
   context 'an instance' do
     shared_examples 'a blueprint instance' do
@@ -187,11 +187,7 @@ describe Praxis::Blueprint do
 
       its([:name]) { should eq(blueprint_class.name) }
       its([:id]) { should eq(blueprint_class.id) }
-      its([:views]) { should be_kind_of(Hash) }
       its(:keys) { should_not include(:anonymous) }
-      it 'should contain the an entry for each view' do
-        subject[:views].keys.should include(:default, :current, :extended)
-      end
     end
 
     context 'for shallow descriptions' do

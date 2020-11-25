@@ -18,7 +18,6 @@ module Praxis
     attr_accessor :object
 
     class << self
-      attr_reader :views
       attr_reader :attribute
       attr_reader :options
       attr_accessor :reference
@@ -29,7 +28,6 @@ module Praxis
       super
 
       klass.instance_eval do
-        @views = {}
         @options = {}
         @domain_model = Object
         @default_fieldset = {}
@@ -72,9 +70,9 @@ module Praxis
       description[:anonymous] = @_anonymous unless @_anonymous.nil?
 
       unless shallow
-        description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|
-          hash[view_name] = view.describe
-        end
+        # description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|
+        #   hash[view_name] = view.describe
+        # end
       end
 
       description
@@ -195,20 +193,20 @@ module Praxis
     def self.view(name, **options, &block)
       #raise "No view for you!"
       #TODO: What do we do with views?....
-      if block_given?
-        return self.views[name] = View.new(name, self, **options, &block)
-      end
+      # if block_given?
+      #   return self.views[name] = View.new(name, self, **options, &block)
+      # end
 
-      self.views[name]
+      # self.views[name]
     end
 
 
     # TODO: how do we dump this? ... using an implicit default view/fieldset?
-    def self.dump(object, view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
+    def self.dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
       object = self.load(object, context, **opts)
       return nil if object.nil?
 
-      object.render(view: view, context: context, **opts)
+      object.render(context: context, **opts)
     end
 
     class << self
