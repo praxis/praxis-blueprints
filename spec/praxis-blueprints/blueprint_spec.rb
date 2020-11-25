@@ -16,17 +16,18 @@ describe Praxis::Blueprint do
     end
   end
 
-  context 'implicit master view' do
-    subject(:master_view) { Person.view(:master) }
+  context 'implicit default_fieldset' do
+    subject(:default_fieldset) { Person.default_fieldset }
 
     it { should_not be(nil) }
     it 'contains all attributes' do
-      master_view.contents.keys.should =~ Person.attributes.keys
-    end
-
-    it 'uses :master view for rendering blueprint sub-attributes' do
-      subview = master_view.contents[:address]
-      subview.should be Address.views[:default]
+      default_fieldset.keys.should include(
+        :name, :email, :age, :full_name, :aliases, :parents, :tags, :href, :alive, :metadata
+      )
+      # Should not have blueprint-derived attributes (or collections of them)
+      default_fieldset.keys.should_not include(
+        :address, :work_address, :prior_addresses, :myself, :friends
+      )
     end
   end
 
@@ -189,7 +190,7 @@ describe Praxis::Blueprint do
       its([:views]) { should be_kind_of(Hash) }
       its(:keys) { should_not include(:anonymous) }
       it 'should contain the an entry for each view' do
-        subject[:views].keys.should include(:default, :current, :extended, :master)
+        subject[:views].keys.should include(:default, :current, :extended)
       end
     end
 
@@ -296,47 +297,6 @@ describe Praxis::Blueprint do
     end
   end
 
-  context 'decorators' do
-    let(:name) { 'Soren II' }
-
-    let(:object) { Person.example.object }
-    subject(:person) { Person.new(object, decorators) }
-
-    context 'as a hash' do
-      let(:decorators) { { name: name } }
-      it do
-        person.name.should eq('Soren II')
-      end
-
-      its(:name) { should be(name) }
-
-      context 'an additional instance with the equivalent hash' do
-        subject(:additional_person) { Person.new(object, name: name) }
-        it { should_not be person }
-      end
-
-      context 'an additional instance with the same hash object' do
-        subject(:additional_person) { Person.new(object, decorators) }
-        it { should_not be person }
-      end
-
-      context 'an instance of the same object without decorators' do
-        subject(:additional_person) { Person.new(object) }
-        it { should_not be person }
-      end
-    end
-
-    context 'as an object' do
-      let(:decorators) { double('decorators', name: name) }
-      its(:name) { should be(name) }
-
-      context 'an additional instance with the same object' do
-        subject(:additional_person) { Person.new(object, decorators) }
-        it { should_not be person }
-      end
-    end
-  end
-
   context 'with a provided :reference option on attributes' do
     context 'that does not match the value set on the class' do
       subject(:mismatched_reference) do
@@ -366,8 +326,8 @@ describe Praxis::Blueprint do
     let(:person) { Person.example('1') }
     it 'is an alias to dump' do
       person.object.contents
-      rendered = Person.render(person, view: :default)
-      dumped = Person.dump(person, view: :default)
+      rendered = Person.render(person, fields: [:name, :full_name])
+      dumped = Person.dump(person, fields: [:name, :full_name])
       expect(rendered).to eq(dumped)
     end
   end
@@ -375,8 +335,22 @@ describe Praxis::Blueprint do
   context '#render' do
     let(:person) { Person.example }
     let(:view_name) { :default }
+    let(:fields) do 
+      {
+        name: true,
+        full_name: true,
+        address: {
+          street: true,
+          state: true,
+        },
+        prior_addresses: {
+          street: true,
+          state: true,
+        }
+      }
+    end
     let(:render_opts) { {} }
-    subject(:output) { person.render(view: view_name, **render_opts) }
+    subject(:output) { person.render(fields: fields, **render_opts) }
 
     context 'with a sub-attribute that is a blueprint' do
       it { should have_key(:name) }
@@ -389,7 +363,7 @@ describe Praxis::Blueprint do
       it 'reports a dump error with the appropriate context' do
         person.address.should_receive(:state).and_raise('Kaboom')
         expect do
-          person.render(view: view_name, context: ['special_root'])
+          person.render(fields: fields, context: ['special_root'])
         end.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
       end
     end

@@ -12,24 +12,17 @@ module Praxis
 
     extend Finalizable
 
-    if RUBY_ENGINE =~ /^jruby/
-      # We are "forced" to require it here (in case hasn't been yet) to make sure the added methods have been applied
-      require 'java'
-      # Only to then delete them, to make sure we don't have them clashing with any attributes
-      undef java, javax, org, com
-    end
-
     @@caching_enabled = false
 
     attr_reader :validating
     attr_accessor :object
-    attr_accessor :decorators
 
     class << self
       attr_reader :views
       attr_reader :attribute
       attr_reader :options
       attr_accessor :reference
+      attr_reader :default_fieldset
     end
 
     def self.inherited(klass)
@@ -39,12 +32,14 @@ module Praxis
         @views = {}
         @options = {}
         @domain_model = Object
+        @default_fieldset = {}
       end
     end
 
     # Override default new behavior to support memoized creation through an IdentityMap
-    def self.new(object, decorators = nil)
-      if @@caching_enabled && decorators.nil?
+    def self.new(object)
+      # TODO: do we want to allow the identity map thing in the object?...maybe not.
+      if @@caching_enabled
         cache = if object.respond_to?(:identity_map) && object.identity_map
                   object.identity_map.blueprint_cache[self]
                 else
@@ -53,13 +48,13 @@ module Praxis
 
         return cache[object] ||= begin
           blueprint = self.allocate
-          blueprint.send(:initialize, object, decorators)
+          blueprint.send(:initialize, object)
           blueprint
         end
       end
 
       blueprint = self.allocate
-      blueprint.send(:initialize, object, decorators)
+      blueprint.send(:initialize, object)
       blueprint
     end
 
@@ -113,14 +108,16 @@ module Praxis
       @domain_model = klass
     end
 
+    # TODO: delegate to Attributor::Struct?
     def self.check_option!(name, value)
-      case name
-      when :identity
-        raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.is_a?(::Symbol)
-        return :ok
-      else
-        return Attributor::Struct.check_option!(name, value)
-      end
+      Attributor::Struct.check_option!(name, value)
+      # case name
+      # when :identity
+      #   raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.is_a?(::Symbol)
+      #   return :ok
+      # else
+      #   return 
+      # end
     end
 
     def self.load(value, context = Attributor::DEFAULT_ROOT_CONTEXT, **options)
@@ -128,6 +125,7 @@ module Praxis
       when self
         value
       when nil, Hash, String
+        # TODO: huh? what if loading fails...shouldn't we capture errors? probably no, in validate?
         # Need to parse/deserialize first
         # or apply default/recursive loading options if necessary
         if (value = self.attribute.load(value, context, **options))
@@ -195,6 +193,8 @@ module Praxis
     end
 
     def self.view(name, **options, &block)
+      #raise "No view for you!"
+      #TODO: What do we do with views?....
       if block_given?
         return self.views[name] = View.new(name, self, **options, &block)
       end
@@ -202,12 +202,15 @@ module Praxis
       self.views[name]
     end
 
+
+    # TODO: how do we dump this? ... using an implicit default view/fieldset?
     def self.dump(object, view: :default, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
       object = self.load(object, context, **opts)
       return nil if object.nil?
 
       object.render(view: view, context: context, **opts)
     end
+
     class << self
       alias render dump
     end
@@ -217,8 +220,8 @@ module Praxis
       if @block
         self.define_attribute!
         self.define_readers!
-        # Don't blindly override a master view if the MediaType wants to define it on its own
-        self.generate_master_view! unless self.view(:master)
+        # Don't blindly override a the default fieldset if the MediaType wants to define it on its own
+        self.generate_default_fieldset! if self.default_fieldset.empty?
         self.resolve_domain_model!
       end
       super
@@ -255,37 +258,27 @@ module Praxis
       # it's likely faster to use define_method here
       # than module_eval, but we should make sure.
       define_method(name) do
-        if @decorators && @decorators.respond_to?(name)
-          @decorators.send(name)
-        else
-          value = @object.__send__(name)
-          return value if value.nil? || value.is_a?(attribute.type)
-          attribute.load(value)
-        end
+        value = @object.__send__(name)
+        return value if value.nil? || value.is_a?(attribute.type)
+        attribute.load(value)
       end
     end
 
-    def self.generate_master_view!
+    def self.generate_default_fieldset!
       attributes = self.attributes
-      view :master do
-        attributes.each do |name, _attr|
-          # Note: we can freely pass master view for attributes that aren't blueprint/containers because
-          # their dump methods will ignore it (they always dump everything regardless)
-          attribute name, view: :default
-        end
+
+      @default_fieldset = {}
+      attributes.each do |name, attr|
+        the_type = (attr.type < Attributor::Collection) ? attr.type.member_type : attr.type
+        next if the_type < Blueprint
+        # TODO: can we further expand containers here? ... or maybe we just cannot...?
+        @default_fieldset[name] = true # TODO: we could start using the fieldset object in praxis (treenode...)
       end
     end
     
-    def initialize(object, decorators = nil)
+    def initialize(object)
       # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
-
-      @decorators = if decorators.is_a?(Hash) && decorators.any?
-                      OpenStruct.new(decorators)
-                    else
-                      decorators
-                    end
-
       @validating = false
     end
 
@@ -295,23 +288,9 @@ module Praxis
       self.object
     end
 
-    # Render the wrapped data with the given view
-    def render(view_name = nil, context: Attributor::DEFAULT_ROOT_CONTEXT, renderer: Renderer.new, **opts)
-      if !view_name.nil?
-        warn 'DEPRECATED: please do not pass the view name as the first parameter in Blueprint.render, pass through the view: named param instead.'
-      elsif opts.key?(:view)
-        view_name = opts[:view]
-      end
-
-      fields = opts[:fields]
-      view_name = :default if view_name.nil? && fields.nil?
-
-      if view_name
-        unless (view = self.class.views[view_name])
-          raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
-        end
-        return view.render(self, context: context, renderer: renderer)
-      end
+    # Render the wrapped data with the given fields (or using the default fieldset otherwise)
+    # TODO: rethink views
+    def render(fields: self.class.default_fieldset, context: Attributor::DEFAULT_ROOT_CONTEXT, renderer: Renderer.new, **opts)
 
       # Accept a simple array of fields, and transform it to a 1-level hash with true values
       if fields.is_a? Array
@@ -319,8 +298,9 @@ module Praxis
       end
 
       # expand fields
-      expanded_fields = FieldExpander.expand(self.class, fields)
+      #expanded_fields = FieldExpander.expand(self.class, fields)
 
+      expanded_fields = fields # TODO
       renderer.render(self, expanded_fields, context: context)
     end
 

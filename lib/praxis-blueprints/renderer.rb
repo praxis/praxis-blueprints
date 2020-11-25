@@ -40,16 +40,17 @@ module Praxis
     # @param [Object] object the object to render
     # @param [Hash] fields the correct set of fields, as from FieldExpander
     def render(object, fields, view = nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
-      if fields.is_a? Array
-        sub_fields = fields[0]
-        object.each_with_index.collect do |sub_object, i|
-          sub_context = context + ["at(#{i})"]
-          render(sub_object, sub_fields, view, context: sub_context)
-        end
-      elsif object.is_a? Praxis::Blueprint
+      if object.is_a? Praxis::Blueprint
         @cache[object._cache_key][fields] ||= _render(object, fields, view, context: context)
       else
-        _render(object, fields, view, context: context)
+        if object.class < Attributor::Collection
+          object.each_with_index.collect do |sub_object, i|
+            sub_context = context + ["at(#{i})"]
+            render(sub_object, fields, view, context: sub_context)
+          end
+        else
+          _render(object, fields, view, context: context)
+        end
       end
     rescue SystemStackError
       raise CircularRenderingError.new(object, context)

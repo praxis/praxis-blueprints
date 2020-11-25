@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+# TODO: move to Praxis proper...it's not used here
 module Praxis
   class ConfigHash < BasicObject
     attr_reader :hash
