@@ -27,36 +27,28 @@ module Praxis
       @include_nil = include_nil
     end
 
-    # Renders an a collection using a given list of per-member fields.
-    #
-    # @param [Object] object the object to render
-    # @param [Hash] fields the set of fields, as from FieldExpander, to apply to each member of the collection.
-    def render_collection(collection, member_fields, view = nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
-      render(collection, [member_fields], view, context: context)
-    end
-
     # Renders an object using a given list of fields.
     #
     # @param [Object] object the object to render
     # @param [Hash] fields the correct set of fields, as from FieldExpander
-    def render(object, fields, view = nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
+    def render(object, fields, context: Attributor::DEFAULT_ROOT_CONTEXT)
       if object.is_a? Praxis::Blueprint
-        @cache[object._cache_key][fields] ||= _render(object, fields, view, context: context)
+        @cache[object._cache_key][fields] ||= _render(object, fields, context: context)
       else
         if object.class < Attributor::Collection
           object.each_with_index.collect do |sub_object, i|
             sub_context = context + ["at(#{i})"]
-            render(sub_object, fields, view, context: sub_context)
+            render(sub_object, fields, context: sub_context)
           end
         else
-          _render(object, fields, view, context: context)
+          _render(object, fields, context: context)
         end
       end
     rescue SystemStackError
       raise CircularRenderingError.new(object, context)
     end
 
-    def _render(object, fields, view = nil, context: Attributor::DEFAULT_ROOT_CONTEXT)
+    def _render(object, fields, context: Attributor::DEFAULT_ROOT_CONTEXT)
       if fields == true
         return case object
                when Attributor::Dumpable
@@ -66,36 +58,28 @@ module Praxis
                end
       end
 
-      notification_payload = {
-        blueprint: object,
-        fields: fields,
-        view: view
-      }
+      fields.each_with_object({}) do |(key, subfields), hash|
+        begin
+          value = object._get_attr(key)
+        rescue => e
+          raise Attributor::DumpError.new(context: context, name: key, type: object.class, original_exception: e)
+        end
 
-      ActiveSupport::Notifications.instrument 'praxis.blueprint.render', notification_payload do
-        fields.each_with_object({}) do |(key, subfields), hash|
-          begin
-            value = object._get_attr(key)
-          rescue => e
-            raise Attributor::DumpError.new(context: context, name: key, type: object.class, original_exception: e)
-          end
+        if value.nil?
+          hash[key] = nil if self.include_nil
+          next
+        end
 
-          if value.nil?
-            hash[key] = nil if self.include_nil
-            next
-          end
-
-          if subfields == true
-            hash[key] = case value
-                        when Attributor::Dumpable
-                          value.dump
-                        else
-                          value
-                        end
-          else
-            new_context = context + [key]
-            hash[key] = render(value, subfields, context: new_context)
-          end
+        if subfields == true
+          hash[key] = case value
+                      when Attributor::Dumpable
+                        value.dump
+                      else
+                        value
+                      end
+        else
+          new_context = context + [key]
+          hash[key] = render(value, subfields, context: new_context)
         end
       end
     end
