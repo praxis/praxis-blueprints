@@ -16,18 +16,15 @@ describe Praxis::Blueprint do
     end
   end
 
-  context 'implicit default_fieldset' do
-    subject(:default_fieldset) { Person.default_fieldset }
+  context 'implicit default_fieldset (when not defined in the blueprint)' do
+    subject(:default_fieldset) { Address.default_fieldset }
 
     it { should_not be(nil) }
     it 'contains all attributes' do
-      default_fieldset.keys.should include(
-        :name, :email, :age, :full_name, :aliases, :parents, :tags, :href, :alive, :metadata
-      )
+      simple_attributes = [:street, :state]
+      default_fieldset.keys.should include(*simple_attributes)
       # Should not have blueprint-derived attributes (or collections of them)
-      default_fieldset.keys.should_not include(
-        :address, :work_address, :prior_addresses, :myself, :friends
-      )
+      default_fieldset.keys.should_not include( Address.attributes.keys - simple_attributes )
     end
   end
 
@@ -80,12 +77,6 @@ describe Praxis::Blueprint do
     blueprint_class.attribute.type.should be blueprint_class::Struct
   end
 
-  # context '.views' do
-  #   it { blueprint_class.should respond_to(:views) }
-  #   it 'sorta has view objects' do
-  #     blueprint_class.views.should have_key(:default)
-  #   end
-  # end
 
   context 'an instance' do
     shared_examples 'a blueprint instance' do
@@ -330,7 +321,6 @@ describe Praxis::Blueprint do
 
   context '#render' do
     let(:person) { Person.example }
-    let(:view_name) { :default }
     let(:fields) do 
       {
         name: true,
@@ -348,6 +338,18 @@ describe Praxis::Blueprint do
     let(:render_opts) { {} }
     subject(:output) { person.render(fields: fields, **render_opts) }
 
+    context 'without passing fields' do
+      it 'renders the default field set defined' do 
+        rendered = person.render( **render_opts)
+        default_top_fields = Person.default_fieldset.keys
+        expect(rendered.keys).to match_array(default_top_fields)
+        expect(default_top_fields).to match_array([
+          :name,
+          :full_name,
+          :address,
+          :prior_addresses])
+      end
+    end
     context 'with a sub-attribute that is a blueprint' do
       it { should have_key(:name) }
       it { should have_key(:address) }
@@ -390,6 +392,20 @@ describe Praxis::Blueprint do
         end
       end
     end
+
+    context 'using un-expanded fields for blueprints' do
+      let(:fields) do 
+        {
+          name: true,
+          address: true, # A blueprint!
+        }
+      end
+      it 'should still render the blueprint sub-attribute with its default fieldset' do
+        address_default_top_fieldset = Address.default_fieldset.keys
+        expect(output[:address].keys).to match(address_default_top_fieldset)
+      end
+
+    end
   end
 
   context '.as_json_schema' do
@@ -402,6 +418,33 @@ describe Praxis::Blueprint do
     it 'delegates to the attribute type' do
       Person.attribute.type.should receive(:json_schema_type)
       Person.json_schema_type
+    end
+  end
+
+  context 'FieldsetParser' do
+    let(:definition_block) do
+      Proc.new do
+        attribute :one
+        attribute :two do
+          attribute :sub_two
+        end
+      end
+    end
+    subject { described_class::FieldsetParser.new(&definition_block) }
+
+    it 'parses properly' do
+      expect(subject.fieldset).to eq(one: true, two: { sub_two: true} )
+    end
+
+    context 'with attribute parameters' do
+      let(:definition_block) do
+        Proc.new do
+          attribute :one, view: :other
+        end
+      end
+      it 'complains and gives instructions if legacy view :default' do
+        expect{ subject.fieldset }.to raise_error(/Default fieldset definitions do not accept parameters/)
+      end
     end
   end
 end

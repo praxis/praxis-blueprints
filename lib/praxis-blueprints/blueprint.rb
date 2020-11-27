@@ -1,12 +1,39 @@
 # frozen_string_literal: true
-require 'ostruct'
-
-# Blueprint ==
-#   - part implementation definition for attributes
-#   - part container for views
 
 module Praxis
-  class Blueprint
+  class Blueprint    
+    
+    # Simple helper class that can parse the `attribute :foobar` dsl into
+    # an equivalent structure hash. Example:
+    # do
+    #   attribute :one
+    #   attribute :complex do
+    #     attribute :sub1
+    #   end
+    #  end
+    # is parsed as: { one: true, complex: { sub1: true} }
+    class FieldsetParser
+      def initialize( &block)
+        @hash = nil
+        @block = block
+      end
+    
+      def attribute(name, **args, &block)
+        raise "Default fieldset definitions do not accept parameters (got: #{args})" \
+              "If you're upgrading from a previous version of Praxis and still using the view :default " \
+              "block syntax, make sure you don't use any view: X parameters when you define the attributes " \
+              "(expand them explicitly if you want deeper structure)" unless args.empty?
+        @hash[name] = block_given? ? FieldsetParser.new(&block).fieldset : true
+      end
+
+      def fieldset
+        return @hash if @hash
+        # Lazy eval
+        @hash = {}
+        instance_eval(&@block)
+        @hash
+      end
+    end
     include Attributor::Type
     include Attributor::Dumpable
 
@@ -21,7 +48,6 @@ module Praxis
       attr_reader :attribute
       attr_reader :options
       attr_accessor :reference
-      attr_reader :default_fieldset
     end
 
     def self.inherited(klass)
@@ -38,13 +64,7 @@ module Praxis
     def self.new(object)
       # TODO: do we want to allow the identity map thing in the object?...maybe not.
       if @@caching_enabled
-        cache = if object.respond_to?(:identity_map) && object.identity_map
-                  object.identity_map.blueprint_cache[self]
-                else
-                  self.cache
-                end
-
-        return cache[object] ||= begin
+        return self.cache[object] ||= begin
           blueprint = self.allocate
           blueprint.send(:initialize, object)
           blueprint
@@ -60,6 +80,7 @@ module Praxis
       'hash'
     end
 
+    # TODO: should we get rid of shallow? (or describe in general?)
     def self.describe(shallow = false, example: nil, **opts)
       type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
 
@@ -106,16 +127,8 @@ module Praxis
       @domain_model = klass
     end
 
-    # TODO: delegate to Attributor::Struct?
     def self.check_option!(name, value)
       Attributor::Struct.check_option!(name, value)
-      # case name
-      # when :identity
-      #   raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.is_a?(::Symbol)
-      #   return :ok
-      # else
-      #   return 
-      # end
     end
 
     def self.load(value, context = Attributor::DEFAULT_ROOT_CONTEXT, **options)
@@ -190,16 +203,25 @@ module Praxis
       value.validate(context)
     end
 
-    def self.view(name, **options, &block)
-      #raise "No view for you!"
-      #TODO: What do we do with views?....
-      # if block_given?
-      #   return self.views[name] = View.new(name, self, **options, &block)
-      # end
-
-      # self.views[name]
+    def self.default_fieldset(&block)
+      return @default_fieldset unless block_given?
+      #TODO: Not complete...just for direct fields...
+      @block_for_default_fieldset = block
     end
 
+    def self.view(name, **options, &block)
+      raise "Views no longer supported. Please use fully expanded fields when rendering" unless name == :default
+      raise "Cannot define the default fieldset through the default view unless a block is passed" unless block_given?
+      puts "[DEPRECATED] default fieldsets should be defined through `default_fieldset` instead of using the view :default block"
+      default_fieldset(&block)
+    end
+
+
+
+    def self.parse_default_fieldset(block)
+      @default_fieldset = FieldsetParser.new(&block).fieldset
+      @block_for_default_fieldset = nil
+    end
 
     # TODO: how do we dump this? ... using an implicit default view/fieldset?
     def self.dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
@@ -219,7 +241,11 @@ module Praxis
         self.define_attribute!
         self.define_readers!
         # Don't blindly override a the default fieldset if the MediaType wants to define it on its own
-        self.generate_default_fieldset! if self.default_fieldset.empty?
+        if @block_for_default_fieldset
+          parse_default_fieldset(@block_for_default_fieldset) 
+        else
+          self.generate_default_fieldset!
+        end
         self.resolve_domain_model!
       end
       super
@@ -295,11 +321,9 @@ module Praxis
         fields = fields.each_with_object({}) { |field, hash| hash[field] = true }
       end
 
-      # expand fields
-      #expanded_fields = FieldExpander.expand(self.class, fields)
-
-      expanded_fields = fields # TODO
-      renderer.render(self, expanded_fields, context: context)
+      # Note: any incoming fields that have a terminal (true) for an attribute that can be expanded
+      # i.e., a Blueprint, will see its fields automatically expanded to its default fieldset (default value of fields kwarg)
+      renderer.render(self, fields, context: context)
     end
 
     alias dump render
