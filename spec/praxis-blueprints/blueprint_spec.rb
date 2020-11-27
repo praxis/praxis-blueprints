@@ -11,8 +11,8 @@ describe Praxis::Blueprint do
       person_1 = Person.example('person 1')
       person_2 = Person.example('person 1')
 
-      person_1.name.should eq(person_2.name)
-      person_1.address.name.should eq(person_2.address.name)
+      expect(person_1.name).to eq(person_2.name)
+      expect(person_1.address.name).to eq(person_2.address.name)
     end
   end
 
@@ -22,9 +22,9 @@ describe Praxis::Blueprint do
     it { should_not be(nil) }
     it 'contains all attributes' do
       simple_attributes = [:id, :name, :street, :state]
-      default_fieldset.keys.should match_array(simple_attributes)
+      expect(default_fieldset.keys).to match_array(simple_attributes)
       # Should not have blueprint-derived attributes (or collections of them)
-      default_fieldset.keys.should_not include( Address.attributes.keys - simple_attributes )
+      expect(default_fieldset.keys).to_not include( Address.attributes.keys - simple_attributes )
     end
   end
 
@@ -43,7 +43,7 @@ describe Praxis::Blueprint do
 
     context '.finalize on Praxis::Blueprint' do
       before do
-        blueprint_class.should_receive(:_finalize!).and_call_original
+        expect(blueprint_class).to receive(:_finalize!).and_call_original
         Praxis::Blueprint.finalize!
       end
 
@@ -52,7 +52,7 @@ describe Praxis::Blueprint do
 
     context '.finalize on that subclass' do
       before do
-        blueprint_class.should_receive(:_finalize!).and_call_original
+        expect(blueprint_class).to receive(:_finalize!).and_call_original
         blueprint_class.finalize!
       end
 
@@ -66,15 +66,15 @@ describe Praxis::Blueprint do
     end
 
     it 'skips attribute definition' do
-      blueprint_class.should_receive(:_finalize!).and_call_original
-      blueprint_class.should_not_receive(:define_attribute)
+      expect(blueprint_class).to receive(:_finalize!).and_call_original
+      expect(blueprint_class).to_not receive(:define_attribute)
       blueprint_class.finalize!
-      blueprint_class.finalized?.should be(true)
+      expect(blueprint_class.finalized?).to be(true)
     end
   end
 
   it 'has an inner Struct class for the attributes' do
-    blueprint_class.attribute.type.should be blueprint_class::Struct
+    expect(blueprint_class.attribute.type).to be blueprint_class::Struct
   end
 
 
@@ -87,7 +87,7 @@ describe Praxis::Blueprint do
 
         it { should have_key(:name) }
         it 'has the right values' do
-          subject[:name].should eq(expected_name)
+          expect(subject[:name]).to eq(expected_name)
         end
       end
 
@@ -145,9 +145,9 @@ describe Praxis::Blueprint do
           end
 
           it 'uses the cache to memoize instance creation' do
-            additional_instance.should be(additional_instance)
-            blueprint_class.cache.should have_key(resource)
-            blueprint_class.cache[resource].should be(blueprint_instance)
+            expect(additional_instance).to be(additional_instance)
+            expect(blueprint_class.cache).to have_key(resource)
+            expect(blueprint_class.cache[resource]).to be(blueprint_instance)
           end
         end
 
@@ -194,17 +194,18 @@ describe Praxis::Blueprint do
       end
 
       it 'outputs examples for leaf values using the provided example' do
-        output[:attributes][:name][:example].should eq example.name
-        output[:attributes][:age][:example].should eq example.age
+        attributes = output[:attributes]
+        expect(attributes[:name][:example]).to eq example.name
+        expect(attributes[:age][:example]).to eq example.age
 
-        output[:attributes][:aliases].should have_key(:example)
-        output[:attributes][:aliases][:example].should eq example.aliases.dump
+        expect(attributes[:aliases]).to have_key(:example)
+        expect(attributes[:aliases][:example]).to eq example.aliases.dump
 
-        output[:attributes][:full_name].should_not have_key(:example)
+        expect(attributes[:full_name]).to_not have_key(:example)
 
-        parents_attributes = output[:attributes][:parents][:type][:attributes]
-        parents_attributes[:father][:example].should eq example.parents.father
-        parents_attributes[:mother][:example].should eq example.parents.mother
+        parents_attributes = attributes[:parents][:type][:attributes]
+        expect(parents_attributes[:father][:example]).to eq example.parents.father
+        expect(parents_attributes[:mother][:example]).to eq example.parents.mother
       end
     end
   end
@@ -270,7 +271,7 @@ describe Praxis::Blueprint do
       it 'should raise an error' do
         expect do
           mismatched_reference.attributes
-        end.to raise_error
+        end.to raise_error(/Reference mismatch/)
       end
     end
   end
@@ -328,12 +329,12 @@ describe Praxis::Blueprint do
       it { should have_key(:name) }
       it { should have_key(:address) }
       it 'renders the sub-attribute correctly' do
-        output[:address].should have_key(:street)
-        output[:address].should have_key(:state)
+        expect(output[:address]).to have_key(:street)
+        expect(output[:address]).to have_key(:state)
       end
 
       it 'reports a dump error with the appropriate context' do
-        person.address.should_receive(:state).and_raise('Kaboom')
+        expect(person.address).to receive(:state).and_raise('Kaboom')
         expect do
           person.render(fields: fields, context: ['special_root'])
         end.to raise_error(/Error while dumping attribute state of type Address for context special_root.address. Reason: .*Kaboom/)
@@ -343,9 +344,9 @@ describe Praxis::Blueprint do
     context 'with sub-attribute that is an Attributor::Model' do
       it { should have_key(:full_name) }
       it 'renders the model correctly' do
-        output[:full_name].should be_kind_of(Hash)
-        output[:full_name].should have_key(:first)
-        output[:full_name].should have_key(:last)
+        expect(output[:full_name]).to be_kind_of(Hash)
+        expect(output[:full_name]).to have_key(:first)
+        expect(output[:full_name]).to have_key(:last)
       end
     end
 
@@ -353,16 +354,16 @@ describe Praxis::Blueprint do
       context 'as a hash' do
         subject(:output) { person.render(fields: { address: { state: true } }) }
         it 'should only have the address rendered' do
-          output.keys.should eq [:address]
+          expect(output.keys).to eq [:address]
         end
         it 'address should only have state' do
-          output[:address].keys.should eq [:state]
+          expect(output[:address].keys).to eq [:state]
         end
       end
       context 'as a simple array' do
         subject(:output) { person.render(fields: [:full_name]) }
         it 'accepts it as the list of top-level attributes to be rendered' do
-          output.keys.should == [:full_name]
+          expect(output.keys).to match_array([:full_name])
         end
       end
     end
@@ -384,13 +385,13 @@ describe Praxis::Blueprint do
 
   context '.as_json_schema' do
     it 'delegates to the attribute type' do
-      Person.attribute.type.should receive(:as_json_schema)
+      expect(Person.attribute.type).to receive(:as_json_schema)
       Person.as_json_schema
     end
   end
   context '.json_schema_type' do
     it 'delegates to the attribute type' do
-      Person.attribute.type.should receive(:json_schema_type)
+      expect(Person.attribute.type).to receive(:json_schema_type)
       Person.json_schema_type
     end
   end
