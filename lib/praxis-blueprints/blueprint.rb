@@ -90,12 +90,6 @@ module Praxis
       description.delete :anonymous # discard the Struct's view of anonymity, and use the Blueprint's one
       description[:anonymous] = @_anonymous unless @_anonymous.nil?
 
-      unless shallow
-        # description[:views] = self.views.each_with_object({}) do |(view_name, view), hash|
-        #   hash[view_name] = view.describe
-        # end
-      end
-
       description
     end
 
@@ -223,7 +217,7 @@ module Praxis
       @block_for_default_fieldset = nil
     end
 
-    # TODO: how do we dump this? ... using an implicit default view/fieldset?
+    # renders using the implicit default fieldset
     def self.dump(object, context: Attributor::DEFAULT_ROOT_CONTEXT, **opts)
       object = self.load(object, context, **opts)
       return nil if object.nil?
@@ -313,7 +307,6 @@ module Praxis
     end
 
     # Render the wrapped data with the given fields (or using the default fieldset otherwise)
-    # TODO: rethink views
     def render(fields: self.class.default_fieldset, context: Attributor::DEFAULT_ROOT_CONTEXT, renderer: Renderer.new, **opts)
 
       # Accept a simple array of fields, and transform it to a 1-level hash with true values

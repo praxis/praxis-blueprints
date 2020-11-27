@@ -21,8 +21,8 @@ describe Praxis::Blueprint do
 
     it { should_not be(nil) }
     it 'contains all attributes' do
-      simple_attributes = [:street, :state]
-      default_fieldset.keys.should include(*simple_attributes)
+      simple_attributes = [:id, :name, :street, :state]
+      default_fieldset.keys.should match_array(simple_attributes)
       # Should not have blueprint-derived attributes (or collections of them)
       default_fieldset.keys.should_not include( Address.attributes.keys - simple_attributes )
     end
@@ -83,8 +83,7 @@ describe Praxis::Blueprint do
       let(:expected_name) { blueprint_instance.name }
 
       context '#render' do
-        let(:view) { :default }
-        subject(:output) { blueprint_instance.render(view: view) }
+        subject(:output) { blueprint_instance.render }
 
         it { should have_key(:name) }
         it 'has the right values' do
@@ -179,31 +178,6 @@ describe Praxis::Blueprint do
       its([:name]) { should eq(blueprint_class.name) }
       its([:id]) { should eq(blueprint_class.id) }
       its(:keys) { should_not include(:anonymous) }
-    end
-
-    context 'for shallow descriptions' do
-      let(:shallow) { true }
-
-      it 'should not include views' do
-        blueprint_class.describe(true).key?(:views).should be(false)
-      end
-      context 'for anonymous blueprints' do
-        let(:blueprint_class) do
-          klass = Class.new(Praxis::Blueprint) do
-            anonymous_type
-            attributes do
-              attribute :name, String
-            end
-          end
-          klass.finalize!
-          klass
-        end
-        it 'reports their anonymous-ness' do
-          description = blueprint_class.describe(true)
-          expect(description).to have_key(:anonymous)
-          expect(description[:anonymous]).to be(true)
-        end
-      end
     end
 
     context 'with an example' do

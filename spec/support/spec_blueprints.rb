@@ -26,7 +26,7 @@ class Person < Praxis::Blueprint
     attribute :metadata, Attributor::Hash
   end
 
-  view :default do
+  default_fieldset do
     attribute :name
     attribute :full_name
     attribute :address do
@@ -47,12 +47,6 @@ class Address < Praxis::Blueprint
     attribute :state, String, values: %w(OR CA)
 
     attribute :resident, Person, example: proc { |address, context| Person.example(context, address: address) }
-  end
-
-  # Backwards compatible way to define the default fieldset
-  view :default do
-    attribute :street
-    attribute :state
   end
 end
 

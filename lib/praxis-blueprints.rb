@@ -11,8 +11,5 @@ require 'praxis-blueprints/finalizable'
 require 'praxis-blueprints/config_hash'
 
 require 'praxis-blueprints/blueprint'
-require 'praxis-blueprints/view'
-require 'praxis-blueprints/collection_view'
 
 require 'praxis-blueprints/renderer'
-require 'praxis-blueprints/field_expander'
