@@ -22,7 +22,8 @@ module Praxis
         raise "Default fieldset definitions do not accept parameters (got: #{args})" \
               "If you're upgrading from a previous version of Praxis and still using the view :default " \
               "block syntax, make sure you don't use any view: X parameters when you define the attributes " \
-              "(expand them explicitly if you want deeper structure)" unless args.empty?
+              "(expand them explicitly if you want deeper structure)" \
+              "The offending view with parameters is defined in:\n#{self.caller.first}" unless args.empty?
         @hash[name] = block_given? ? FieldsetParser.new(&block).fieldset : true
       end
 
@@ -204,9 +205,14 @@ module Praxis
     end
 
     def self.view(name, **options, &block)
-      raise "Views no longer supported. Please use fully expanded fields when rendering" unless name == :default
+      unless name == :default
+        raise "[ERROR] Views are no longer supported. Please use fully expanded fields when rendering.\n" \
+              "NOTE that defining the :default view is deprecated, but still temporarily allowed, as an alias to define the default_fieldset.\n" \
+              "A view for name #{name} is attempted to be defined in:\n#{self.caller.first}"
+      end
       raise "Cannot define the default fieldset through the default view unless a block is passed" unless block_given?
-      puts "[DEPRECATED] default fieldsets should be defined through `default_fieldset` instead of using the view :default block"
+      puts "[DEPRECATED] default fieldsets should be defined through `default_fieldset` instead of using the view :default block.\n" \
+           "A default view is attempted to be defined in:\n#{self.caller.first}"
       default_fieldset(&block)
     end
 
