@@ -158,58 +158,6 @@ describe Praxis::Blueprint do
     end
   end
 
-  context '.describe' do
-    let(:shallow) { false }
-    let(:example_object) { nil }
-
-    before do
-      expect(blueprint_class.attribute.type).to receive(:describe).with(shallow, example: example_object).ordered.and_call_original
-    end
-
-    context 'for non-shallow descriptions' do
-      before do
-        # Describing a Person also describes the :myself and :friends attributes. They are both a Person and a Coll of Person.
-        # This means that Person type `describe` is called two more times, thes times with shallow=true
-        expect(blueprint_class.attribute.type).to receive(:describe).with(true, example: example_object).twice.and_call_original
-      end
-
-      subject(:output) { blueprint_class.describe }
-
-      its([:name]) { should eq(blueprint_class.name) }
-      its([:id]) { should eq(blueprint_class.id) }
-      its(:keys) { should_not include(:anonymous) }
-    end
-
-    context 'with an example' do
-      let(:example) { blueprint_class.example }
-      let(:example_object) { example.object }
-      let(:shallow) { false }
-
-      subject(:output) { blueprint_class.describe(false, example: example) }
-      before do
-        # Describing a Person also describes the :myself and :friends attributes. They are both a Person and a Coll of Person.
-        # This means that Person type `describe` is called two more times, thes times with shallow=true
-        expect(blueprint_class.attribute.type).to receive(:describe)
-          .with(true, example: an_instance_of(blueprint_class.attribute.type)).twice.and_call_original
-      end
-
-      it 'outputs examples for leaf values using the provided example' do
-        attributes = output[:attributes]
-        expect(attributes[:name][:example]).to eq example.name
-        expect(attributes[:age][:example]).to eq example.age
-
-        expect(attributes[:aliases]).to have_key(:example)
-        expect(attributes[:aliases][:example]).to eq example.aliases.dump
-
-        expect(attributes[:full_name]).to_not have_key(:example)
-
-        parents_attributes = attributes[:parents][:type][:attributes]
-        expect(parents_attributes[:father][:example]).to eq example.parents.father
-        expect(parents_attributes[:mother][:example]).to eq example.parents.mother
-      end
-    end
-  end
-
   context '.validate' do
     let(:hash) { { name: 'bob' } }
     let(:person) { Person.load(hash) }

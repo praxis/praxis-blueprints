@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Praxis
   class Renderer
     attr_reader :include_nil
@@ -18,7 +19,7 @@ module Praxis
         super("SystemStackError in rendering #{object.class} with context: #{pretty_context}")
       end
     end
-    
+
     def initialize(include_nil: false)
       @cache = Hash.new do |hash, key|
         hash[key] = {}

@@ -81,19 +81,6 @@ module Praxis
       'hash'
     end
 
-    # TODO: should we get rid of shallow? (or describe in general?)
-    def self.describe(shallow = false, example: nil, **opts)
-      type_name = self.ancestors.find { |k| k.name && !k.name.empty? }.name
-
-      example = example.object if example
-
-      description = self.attribute.type.describe(shallow, example: example, **opts).merge!(id: self.id, name: type_name)
-      description.delete :anonymous # discard the Struct's view of anonymity, and use the Blueprint's one
-      description[:anonymous] = @_anonymous unless @_anonymous.nil?
-
-      description
-    end
-
     def self.attributes(opts = {}, &block)
       if block_given?
         raise 'Redefining Blueprint attributes is not currently supported' if self.const_defined?(:Struct, false)
@@ -131,9 +118,6 @@ module Praxis
       when self
         value
       when nil, Hash, String
-        # TODO: huh? what if loading fails...shouldn't we capture errors? probably no, in validate?
-        # Need to parse/deserialize first
-        # or apply default/recursive loading options if necessary
         if (value = self.attribute.load(value, context, **options))
           self.new(value)
         end
@@ -170,7 +154,6 @@ module Praxis
     end
 
     def self.valid_type?(value)
-      # FIXME: this should be more... ducklike
       value.is_a?(self) || value.is_a?(self.attribute.type)
     end
 
@@ -200,7 +183,7 @@ module Praxis
 
     def self.default_fieldset(&block)
       return @default_fieldset unless block_given?
-      #TODO: Not complete...just for direct fields...
+
       @block_for_default_fieldset = block
     end
 
@@ -215,8 +198,6 @@ module Praxis
            "A default view is attempted to be defined in:\n#{Kernel.caller.first}"
       default_fieldset(&block)
     end
-
-
 
     def self.parse_default_fieldset(block)
       @default_fieldset = FieldsetParser.new(&block).fieldset
@@ -295,13 +276,14 @@ module Praxis
       attributes.each do |name, attr|
         the_type = (attr.type < Attributor::Collection) ? attr.type.member_type : attr.type
         next if the_type < Blueprint
-        # TODO: can we further expand containers here? ... or maybe we just cannot...?
-        @default_fieldset[name] = true # TODO: we could start using the fieldset object in praxis (treenode...)
+        # Note: we won't try to expand fields here, as we want to be lazy (and we're expanding)
+        # every time a request comes in anyway. This could be an optimization we do at some point
+        # or we can 'memoize it' to avoid trying to expand it over an over...
+        @default_fieldset[name] = true
       end
     end
     
     def initialize(object)
-      # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
       @validating = false
     end
@@ -320,8 +302,7 @@ module Praxis
         fields = fields.each_with_object({}) { |field, hash| hash[field] = true }
       end
 
-      # Note: any incoming fields that have a terminal (true) for an attribute that can be expanded
-      # i.e., a Blueprint, will see its fields automatically expanded to its default fieldset (default value of fields kwarg)
+      expanded  = Praxis::FieldExpander.new.expand(self, fields)
       renderer.render(self, fields, context: context)
     end
 
