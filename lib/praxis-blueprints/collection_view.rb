@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Praxis
   class CollectionView < View
     def initialize(name, schema, member_view = nil)

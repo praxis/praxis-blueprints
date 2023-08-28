@@ -1,12 +1,11 @@
 # frozen_string_literal: true
+
 module Praxis
   class Renderer
-    attr_reader :include_nil
-    attr_reader :cache
+    attr_reader :include_nil, :cache
 
     class CircularRenderingError < StandardError
-      attr_reader :object
-      attr_reader :context
+      attr_reader :object, :context
 
       def initialize(object, context)
         @object = object
@@ -75,7 +74,7 @@ module Praxis
         fields.each_with_object({}) do |(key, subfields), hash|
           begin
             value = object._get_attr(key)
-          rescue => e
+          rescue StandardError => e
             raise Attributor::DumpError.new(context: context, name: key, type: object.class, original_exception: e)
           end
 

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe Praxis::CollectionView do
@@ -58,7 +59,7 @@ describe Praxis::CollectionView do
     subject(:output) { collection_view.render(people, context: root_context) }
 
     it { should be_kind_of(Array) }
-    it { should eq people.collect { |person| member_view.render(person) } }
+    it { should eq(people.collect { |person| member_view.render(person) }) }
   end
 
   context '#example' do

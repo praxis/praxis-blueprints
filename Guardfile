@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 # Config file for Guard
 # More info at https://github.com/guard/guard#readme
 group :red_green_refactor, halt_on_fail: true do

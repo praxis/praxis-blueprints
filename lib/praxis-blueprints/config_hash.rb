@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 module Praxis
   class ConfigHash < BasicObject
     attr_reader :hash
@@ -21,7 +22,7 @@ module Praxis
       true
     end
 
-    def method_missing(name, value, *rest, &block) # rubocop:disable Style/MethodMissing
+    def method_missing(name, value, *rest, &block)
       if (existing = @hash[name])
         if block
           existing << [value, block]

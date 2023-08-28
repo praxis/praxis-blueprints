@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe Praxis::View do
@@ -32,9 +33,9 @@ describe Praxis::View do
 
   context 'defining views' do
     subject(:contents) { view.contents }
-    its(:keys) { should match_array([:name, :email, :full_name, :parents, :address, :prior_addresses, :work_address]) }
+    its(:keys) { should match_array(%i[name email full_name parents address prior_addresses work_address]) }
     it 'saves attributes defined on the Blueprint' do
-      [:name, :email, :full_name].each do |attr|
+      %i[name email full_name].each do |attr|
         contents[attr].should be Person.attributes[attr]
       end
     end
@@ -67,7 +68,7 @@ describe Praxis::View do
 
         it 'creates sub-CollectionViews from a block' do
           contents[:prior_addresses].should be_kind_of(Praxis::CollectionView)
-          contents[:prior_addresses].contents.keys.should match_array([:name, :street])
+          contents[:prior_addresses].contents.keys.should match_array(%i[name street])
         end
       end
 
@@ -84,7 +85,7 @@ describe Praxis::View do
           it 'creates the sub-CollectionViews with a member view with the same contents of the parent' do
             contents[:friends].should be_kind_of(Praxis::CollectionView)
             contents[:friends].contents.should eq(view.contents)
-            contents[:friends].contents.keys.should match_array([:myself, :friends])
+            contents[:friends].contents.keys.should match_array(%i[myself friends])
           end
         end
       end
@@ -93,7 +94,7 @@ describe Praxis::View do
 
   context '#describe' do
     subject(:description) { view.describe }
-    its(:keys) { should =~ [:attributes, :type] }
+    its(:keys) { should =~ %i[attributes type] }
     its([:type]) { should eq(:standard) }
     context 'returns attributes' do
       subject { description[:attributes] }

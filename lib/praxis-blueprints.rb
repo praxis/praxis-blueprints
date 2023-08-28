@@ -1,10 +1,11 @@
 # frozen_string_literal: true
+
 require 'json'
 require 'yaml'
 require 'logger'
 
 require 'attributor'
-
+require 'active_support/notifications'
 require 'praxis-blueprints/version'
 
 require 'praxis-blueprints/finalizable'
