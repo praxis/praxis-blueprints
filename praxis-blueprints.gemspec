@@ -1,5 +1,6 @@
 # frozen_string_literal: true
-lib = File.expand_path('../lib', __FILE__)
+
+lib = File.expand_path('lib', __dir__)
 $LOAD_PATH.unshift(lib) unless $LOAD_PATH.include?(lib)
 require 'praxis-blueprints/version'
 
@@ -27,25 +28,24 @@ Gem::Specification.new do |spec|
   spec.test_files    = spec.files.grep(%r{^(test|spec|features)/})
   spec.require_paths = ['lib']
 
-  spec.add_runtime_dependency('randexp', ['~> 0'])
+  spec.add_runtime_dependency('activesupport', '>= 6')
   spec.add_runtime_dependency('attributor', ['>= 5.5'])
-  spec.add_runtime_dependency('activesupport', ['>= 3'])
 
   spec.add_development_dependency 'bundler'
   spec.add_development_dependency 'rake'
 
-  spec.add_development_dependency('redcarpet', ['< 3.0'])
-  spec.add_development_dependency('yard')
+  spec.add_development_dependency('coveralls')
+  spec.add_development_dependency('fuubar')
   spec.add_development_dependency('guard', ['~> 2'])
   spec.add_development_dependency('guard-rspec', ['>= 0'])
-  spec.add_development_dependency('rspec')
-  spec.add_development_dependency('rspec-its')
-  spec.add_development_dependency('rspec-collection_matchers')
+  spec.add_development_dependency 'guard-rubocop'
   spec.add_development_dependency('pry')
   spec.add_development_dependency('pry-byebug')
   spec.add_development_dependency('pry-stack_explorer')
-  spec.add_development_dependency('fuubar')
-  spec.add_development_dependency('coveralls')
+  spec.add_development_dependency('redcarpet', ['< 3.0'])
+  spec.add_development_dependency('rspec')
+  spec.add_development_dependency('rspec-collection_matchers')
+  spec.add_development_dependency('rspec-its')
   spec.add_development_dependency 'rubocop'
-  spec.add_development_dependency 'guard-rubocop'
+  spec.add_development_dependency('yard')
 end

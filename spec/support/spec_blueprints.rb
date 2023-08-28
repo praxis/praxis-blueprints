@@ -1,29 +1,30 @@
 # frozen_string_literal: true
+
 class Person < Praxis::Blueprint
   attributes do
-    attribute :name, String, example: /[:first_name:]/
-    attribute :email, String, example: proc { |person| "#{person.name}@example.com" }
+    attribute :name, String, example: proc { Faker::Name.first_name }
+    attribute :email, String, example: proc { |person| "#{person.name}@example.com" }, null: true
 
-    attribute :age, Integer
+    attribute :age, Integer, null: true
 
-    attribute :full_name, FullName
-    attribute :aliases, Attributor::Collection.of(FullName)
+    attribute :full_name, FullName, null: true
+    attribute :aliases, Attributor::Collection.of(FullName), null: true
 
-    attribute :address, Address, example: proc { |person, context| Address.example(context, resident: person) }
-    attribute :work_address, Address
+    attribute :address, Address, example: proc { |person, context| Address.example(context, resident: person) }, null: true
+    attribute :work_address, Address, null: true
 
-    attribute :prior_addresses, Attributor::Collection.of(Address)
-    attribute :parents do
+    attribute :prior_addresses, Attributor::Collection.of(Address), null: true
+    attribute :parents, null: true do
       attribute :father, String
       attribute :mother, String
     end
 
-    attribute :tags, Attributor::Collection.of(String)
-    attribute :href, String
-    attribute :alive, Attributor::Boolean, default: true
-    attribute :myself, Person
-    attribute :friends, Attributor::Collection.of(Person)
-    attribute :metadata, Attributor::Hash
+    attribute :tags, Attributor::Collection.of(String), null: true
+    attribute :href, String, null: true
+    attribute :alive, Attributor::Boolean, default: true, null: true
+    attribute :myself, Person, null: true
+    attribute :friends, Attributor::Collection.of(Person), null: true
+    attribute :metadata, Attributor::Hash, null: true
   end
 
   view :default do
@@ -63,12 +64,12 @@ end
 
 class Address < Praxis::Blueprint
   attributes do
-    attribute :id, Integer
-    attribute :name, String
-    attribute :street, String
-    attribute :state, String, values: %w(OR CA)
+    attribute :id, Integer, null: true
+    attribute :name, String, null: true
+    attribute :street, String, null: true
+    attribute :state, String, values: %w[OR CA], null: true
 
-    attribute :resident, Person, example: proc { |address, context| Person.example(context, address: address) }
+    attribute :resident, Person, example: proc { |address, context| Person.example(context, address: address) }, null: true
   end
 
   view :default do
@@ -92,8 +93,8 @@ end
 
 class FullName < Attributor::Model
   attributes do
-    attribute :first, String, example: /[:first_name:]/
-    attribute :last, String, example: /[:last_name:]/
+    attribute :first, String, example: proc { Faker::Name.first_name }
+    attribute :last, String, example: proc { Faker::Name.last_name }
   end
 end
 

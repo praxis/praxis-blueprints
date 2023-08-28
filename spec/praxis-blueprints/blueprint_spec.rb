@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require File.expand_path(File.dirname(__FILE__) + '/../spec_helper')
 
 describe Praxis::Blueprint do
@@ -108,13 +109,11 @@ describe Praxis::Blueprint do
 
     context 'from Blueprint.example' do
       subject(:blueprint_instance) do
-        blueprint_class.example('ExamplePerson', 
-          address: nil,
-          prior_addresses: [],
-          work_address: nil,
-          myself: nil,
-          friends: []
-        )
+        blueprint_class.example('ExamplePerson',
+                                prior_addresses: [],
+                                work_address: nil,
+                                myself: nil,
+                                friends: [])
       end
       it_behaves_like 'a blueprint instance'
     end
@@ -128,7 +127,7 @@ describe Praxis::Blueprint do
           email: 'bob@example.com',
           aliases: [],
           prior_addresses: [],
-          parents: { father: Randgen.first_name, mother: Randgen.first_name },
+          parents: { father: Faker::Name.first_name, mother: Faker::Name.first_name },
           href: 'www.example.com',
           alive: true
         }

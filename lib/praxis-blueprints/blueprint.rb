@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require 'ostruct'
 
 # Blueprint ==
@@ -22,13 +23,10 @@ module Praxis
     @@caching_enabled = false
 
     attr_reader :validating
-    attr_accessor :object
-    attr_accessor :decorators
+    attr_accessor :object, :decorators
 
     class << self
-      attr_reader :views
-      attr_reader :attribute
-      attr_reader :options
+      attr_reader :views, :attribute, :options
       attr_accessor :reference
     end
 
@@ -110,6 +108,7 @@ module Praxis
 
     def self.domain_model(klass = nil)
       return @domain_model if klass.nil?
+
       @domain_model = klass
     end
 
@@ -117,9 +116,10 @@ module Praxis
       case name
       when :identity
         raise Attributor::AttributorException, "Invalid identity type #{value.inspect}" unless value.is_a?(::Symbol)
-        return :ok
+
+        :ok
       else
-        return Attributor::Struct.check_option!(name, value)
+        Attributor::Struct.check_option!(name, value)
       end
     end
 
@@ -185,19 +185,16 @@ module Praxis
 
     def self.validate(value, context = Attributor::DEFAULT_ROOT_CONTEXT, _attribute = nil)
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context.nil?
+
       context = [context] if context.is_a? ::String
 
-      unless value.is_a?(self)
-        raise ArgumentError, "Error validating #{Attributor.humanize_context(context)} as #{self.name} for an object of type #{value.class.name}."
-      end
+      raise ArgumentError, "Error validating #{Attributor.humanize_context(context)} as #{self.name} for an object of type #{value.class.name}." unless value.is_a?(self)
 
       value.validate(context)
     end
 
     def self.view(name, **options, &block)
-      if block_given?
-        return self.views[name] = View.new(name, self, **options, &block)
-      end
+      return self.views[name] = View.new(name, self, **options, &block) if block_given?
 
       self.views[name]
     end
@@ -260,6 +257,7 @@ module Praxis
         else
           value = @object.__send__(name)
           return value if value.nil? || value.is_a?(attribute.type)
+
           attribute.load(value)
         end
       end
@@ -269,13 +267,13 @@ module Praxis
       attributes = self.attributes
       view :master do
         attributes.each do |name, _attr|
-          # Note: we can freely pass master view for attributes that aren't blueprint/containers because
+          # NOTE: we can freely pass master view for attributes that aren't blueprint/containers because
           # their dump methods will ignore it (they always dump everything regardless)
           attribute name, view: :default
         end
       end
     end
-    
+
     def initialize(object, decorators = nil)
       # TODO: decide what sort of type checking (if any) we want to perform here.
       @object = object
@@ -310,13 +308,12 @@ module Praxis
         unless (view = self.class.views[view_name])
           raise "view with name '#{view_name.inspect}' is not defined in #{self.class}"
         end
+
         return view.render(self, context: context, renderer: renderer)
       end
 
       # Accept a simple array of fields, and transform it to a 1-level hash with true values
-      if fields.is_a? Array
-        fields = fields.each_with_object({}) { |field, hash| hash[field] = true }
-      end
+      fields = fields.each_with_object({}) { |field, hash| hash[field] = true } if fields.is_a? Array
 
       # expand fields
       expanded_fields = FieldExpander.expand(self.class, fields)
@@ -332,10 +329,12 @@ module Praxis
 
     def validate(context = Attributor::DEFAULT_ROOT_CONTEXT)
       raise ArgumentError, "Invalid context received (nil) while validating value of type #{self.name}" if context.nil?
+
       context = [context] if context.is_a? ::String
       keys_with_values = []
 
       raise 'validation conflict' if @validating
+
       @validating = true
 
       errors = []
@@ -344,9 +343,8 @@ module Praxis
         value = self.send(sub_attribute_name)
         keys_with_values << sub_attribute_name unless value.nil?
 
-        if value.respond_to?(:validating) # really, it's a thing with sub-attributes
-          next if value.validating
-        end
+        next if value.respond_to?(:validating) && value.validating # really, it's a thing with sub-attributes
+
         errors.concat(sub_attribute.validate(value, sub_context))
       end
       self.class.attribute.type.requirements.each do |req|
@@ -367,7 +365,7 @@ module Praxis
     def self.as_json_schema(**args)
       @attribute.type.as_json_schema(args)
     end
-    
+
     def self.json_schema_type
       @attribute.type.json_schema_type
     end

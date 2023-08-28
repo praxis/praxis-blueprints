@@ -1,15 +1,13 @@
 # frozen_string_literal: true
+
 module Praxis
   class View
-    attr_reader :schema
-    attr_reader :contents
-    attr_reader :name
-    attr_reader :options
+    attr_reader :schema, :contents, :name, :options
 
     def initialize(name, schema, **options, &block)
       @name = name
       @schema = schema
-      @contents = ::Hash.new
+      @contents = {}
       @block = block
 
       @options = options
@@ -85,9 +83,7 @@ module Praxis
 
       contents.each do |k, dumpable|
         inner_desc = {}
-        if dumpable.is_a?(Praxis::View)
-          inner_desc[:view] = dumpable.name if dumpable.name
-        end
+        inner_desc[:view] = dumpable.name if dumpable.is_a?(Praxis::View) && dumpable.name
         view_attributes[k] = inner_desc
       end
 

@@ -1,4 +1,5 @@
 # frozen_string_literal: true
+
 require_relative '../spec_helper'
 
 describe Praxis::Renderer do
@@ -30,7 +31,7 @@ describe Praxis::Renderer do
       address: {
         state: true,
         street: true,
-        resident:  { name: true }
+        resident: { name: true }
       },
       prior_addresses: [{ name: true }],
       work_address: true,
@@ -45,7 +46,7 @@ describe Praxis::Renderer do
   subject(:output) { renderer.render(person, fields) }
 
   it 'renders existing attributes' do
-    output.keys.should match_array([:name, :full_name, :alive, :address, :prior_addresses, :metadata, :aliases])
+    output.keys.should match_array(%i[name full_name alive address prior_addresses metadata aliases])
 
     output[:name].should eq person.name
     output[:full_name].should eq(first: person.full_name.first, last: person.full_name.last)
@@ -150,7 +151,7 @@ describe Praxis::Renderer do
 
   context 'rendering stuff that breaks badly' do
     it 'does not break badly' do
-      renderer.render(person, {tags: [true]})
+      renderer.render(person, { tags: [true] })
     end
   end
 
